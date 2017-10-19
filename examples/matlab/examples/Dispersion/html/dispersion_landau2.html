@@ -1,0 +1,488 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>dispersion_landau2</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-28"><meta name="DC.source" content="dispersion_landau2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Dispersion relation for Landau Damping</a></li><li><a href="#2">Plasma dispersion function Z(x)</a></li><li><a href="#3">Dispersion relation</a></li><li><a href="#4">Problem Parameters</a></li><li><a href="#7">Compute Zeroes and Poles by Cauchy Integrals</a></li><li><a href="#10">Discussion</a></li><li><a href="#11">Standard test case <img src="dispersion_landau2_eq06275644584437600454.png" alt="$k=0.5$"></a></li><li><a href="#12">VPA Newton-Raphson refinement</a></li></ul></div><h2>Dispersion relation for Landau Damping<a name="1"></a></h2><p>Author: <b>Jakob Ameres</b> <a href="http://jakobameres.com">jakobameres.com</a></p><p>Use MATLABs symbolic toolbox, and define frequency <img src="dispersion_landau2_eq08589834809570054062.png" alt="$\omega$">, wave vector <img src="dispersion_landau2_eq15636846968047188835.png" alt="$k$"></p><pre class="codeinput">syms <span class="string">omega</span> <span class="string">k</span> <span class="string">x</span>
+
+
+<span class="comment">% Set up grid of wave vectors the dispersion relation should be solved for</span>
+<span class="comment">% kgrid=0.01:0.005:0.6;</span>
+kgrid=0.05:0.05:0.6;
+</pre><h2>Plasma dispersion function Z(x)<a name="2"></a></h2><p>The plasma dispersion function can be found in many textbooks</p><p><img src="dispersion_landau2_eq15944133889696566298.png" alt="$$ Z(x)= \frac{1}{\sqrt{\pi}} \int_{\gamma}&#xA;   \frac{ \mathrm{e}^{-z^2}}{z-x} \mathrm{d}z$$"></p><pre class="codeinput">Z=symfun( sqrt(sym(pi))*exp(-x^2)*(1j-erfi(x)),x);
+</pre><h2>Dispersion relation<a name="3"></a></h2><p>The dispersion relation for the Vlasov-Poisson system with an initial state Maxwellian (set <img src="dispersion_landau2_eq01505123926026738633.png" alt="$\alpha=1$">)</p><p><img src="dispersion_landau2_eq06820511547714439177.png" alt="$$f_0(t=0,x,v)=\frac{\alpha}{\sqrt{2 \pi} v_{th}}&#xA;      \mathrm{e}^{-\frac{(v-v_0)^2 }{2 v_{th}^2 }} $$"></p><p>with thermal velocity <img src="dispersion_landau2_eq03266579450162345072.png" alt="$v_{th}$">, mean velocity <img src="dispersion_landau2_eq15814630492123371125.png" alt="$v_0$"> and plasma frequency <img src="dispersion_landau2_eq07149943006201974670.png" alt="$\omega_p$"> is given as</p><p><img src="dispersion_landau2_eq07135909827735797674.png" alt="$$  D(\omega,k)= 1 + \alpha \left( \frac{\omega_p}{k v_{th}} \right)^2  \left[1+ \frac{1}{\sqrt{2} v_{th} } \left( \frac{\omega}{k} - v_0 \right)   Z\left( \frac{1}{\sqrt{2} v_{th} } \left( \frac{\omega}{k} - v_0 \right)   \right) \right] $$">.</p><p>Set parameters</p><pre class="codeinput">vth=1;    <span class="comment">% Thermal velocity of electrons</span>
+omegap=1; <span class="comment">% Plasma frequency</span>
+alpha=1;  <span class="comment">% Normalization</span>
+v0=0;     <span class="comment">% Mean velocity</span>
+
+<span class="comment">% Dispersion relation in symbolic variables</span>
+D=symfun(1+ alpha*(omegap/vth/k)^2*(1+ (omega/k-v0)/vth/sqrt(2)*<span class="keyword">...</span>
+    Z((omega/k-v0)/vth/sqrt(2))), <span class="keyword">...</span>
+    [omega,k]);
+</pre><h2>Problem Parameters<a name="4"></a></h2><p>Use MATLABS internal variable precision arithmetic to evaluate the Dispersion relation on the contour of a circle in the complex plane with radius <i>radius</i>. For all $ k \in$ <i>kgrid</i> we search for <img src="dispersion_landau2_eq14655678868310707631.png" alt="$\omega \in C$"> with <img src="dispersion_landau2_eq13668627866726079179.png" alt="$|\omega| \leq$"> <i>radius</i>.</p><pre class="codeinput">radius=3; <span class="comment">%</span>
+n=256;    <span class="comment">% Number of unit roots, increase for precision</span>
+</pre><p>Roots of unity in symbolic expression zk=vpa(exp(1j*2*sym('pi')*(0:n-1)/n));</p><p><img src="dispersion_landau2_eq17962522211677764955.png" alt="$$ z_k= \mathrm{e}^{ 2 \pi \mathrm{i} \frac{k}{n} },&#xA;  k=0, \dots, n-1 $$"></p><pre class="codeinput">zk=exp(sym(<span class="string">'1j*2*pi'</span>)*(0:n-1)/n);
+
+<span class="comment">% Number of zeroes to retrieve K&lt;&lt;n</span>
+K=5;
+K=min(K,n/2-1); <span class="comment">%allowed maximum</span>
+<span class="comment">% intK=(diff(D,omega)/D/(sym('2*pi*1j')));</span>
+<span class="comment">% mean(double(intK(zk,kgrid(4))))</span>
+
+
+<span class="comment">% Define double precision evaluations for vectorization</span>
+residual=matlabFunction(abs(D),<span class="string">'Vars'</span>,[omega,k]);
+
+<span class="comment">%Structure containing found roots in loose order</span>
+roots=struct(<span class="string">'omega'</span>,[],<span class="string">'k'</span>,[],<span class="string">'residual'</span>,[]);
+num_roots=0;
+
+<span class="keyword">for</span> idx=1:length(kgrid)
+</pre><pre class="codeinput">    <span class="comment">% Print status</span>
+    fprintf(<span class="string">'k= %08.4f,  %05.2f%%\n'</span>,<span class="keyword">...</span>
+        kgrid(idx), (idx-1)/length(kgrid)*100);
+
+    <span class="comment">% Alternative: use the ratdisk_K method</span>
+     <span class="comment">%gk=double(vpa(1./D(zk*radius,kgrid(idx))));</span>
+     <span class="comment">%[r,a,b,mu,nu,w] = ratdisk(gk, n-1-K, K);</span>
+</pre><pre class="codeoutput">k= 000.0500,  00.00%
+</pre><pre class="codeoutput">k= 000.1000,  08.33%
+</pre><pre class="codeoutput">k= 000.1500,  16.67%
+</pre><pre class="codeoutput">k= 000.2000,  25.00%
+</pre><pre class="codeoutput">k= 000.2500,  33.33%
+</pre><pre class="codeoutput">k= 000.3000,  41.67%
+</pre><pre class="codeoutput">k= 000.3500,  50.00%
+</pre><pre class="codeoutput">k= 000.4000,  58.33%
+</pre><pre class="codeoutput">k= 000.4500,  66.67%
+</pre><pre class="codeoutput">k= 000.5000,  75.00%
+</pre><pre class="codeoutput">k= 000.5500,  83.33%
+</pre><pre class="codeoutput">k= 000.6000,  91.67%
+</pre><h2>Compute Zeroes and Poles by Cauchy Integrals<a name="7"></a></h2><p>Algorithm [Cz2] taken from</p><p>NUMERICAL ALGORITHMS BASED ON ANALYTIC FUNCTION VALUES AT ROOTS OF UNITY, ANTHONY P. AUSTIN , PETER KRAVANJA , AND LLOYD N. TREFETHEN, SIAM J. NUMER. ANAL. Vol. 52, No. 4, pp. 1795&#8211;1821,</p><pre class="codeinput">    s = ifft(double(1./D( zk*radius, kgrid(idx)  )));
+    H = hankel(s(2:K+1), s(K+1:2*K));
+    H2 = hankel(s(3:K+2), s(K+2:2*K+1));
+    w = eig(H2,H);
+
+    w=w*radius;
+</pre><p>Evaluate residual <img src="dispersion_landau2_eq11106313670639904603.png" alt="$|D(\omega,k)|$"></p><pre class="codeinput">    res=residual(w,kgrid(idx));
+
+
+    <span class="comment">% Delete invalid zeroes</span>
+    valid=(abs(w)&lt;radius &amp; ~isinf(res) &amp; ~isnan(res));
+    res=res(valid);
+    w=w(valid);
+
+    <span class="comment">% Sort by residual</span>
+    [res,I]=sort(abs(res));
+    w=w(I);
+
+    <span class="comment">% append new roots</span>
+    roots=[roots, struct(<span class="string">'omega'</span>,w.',<span class="keyword">...</span>
+        <span class="string">'k'</span>,ones(1,length(w))*kgrid(idx) ,<span class="keyword">...</span>
+        <span class="string">'residual'</span>,res.')];
+</pre><pre class="codeinput"><span class="keyword">end</span>
+
+<span class="comment">% Rearrange structure and sort by residual</span>
+roots=struct(<span class="string">'omega'</span>,[roots.omega],<span class="string">'k'</span>,[roots.k],<span class="keyword">...</span>
+                   <span class="string">'residual'</span>,[roots.residual]);
+[~,I]=sort(roots.residual);
+roots.omega=roots.omega(I);
+roots.residual=roots.residual(I);
+roots.k=roots.k(I);
+</pre><h2>Discussion<a name="10"></a></h2><pre class="codeinput">figure;
+plot(real(roots.omega), imag(roots.omega),<span class="string">'*'</span>); hold <span class="string">on</span>;
+plot(radius*cos(linspace(0,2*pi)),radius*sin(linspace(0,2*pi)),<span class="string">'k-'</span>);
+title(<span class="string">'roots '</span>);
+xlabel(<span class="string">'real'</span>); ylabel(<span class="string">'imaginary'</span>);
+axis <span class="string">equal</span>; grid <span class="string">on</span>;
+
+
+
+figure;
+semilogy(roots.residual);
+ylabel(<span class="string">'residual'</span>);
+xlabel(<span class="string">'root No.'</span>);
+grid <span class="string">on</span>;
+
+
+tol=1;
+valid=roots.residual&lt;tol;
+
+
+
+fprintf(<span class="string">'Found %d roots \n'</span>, sum(valid));
+
+figure;
+ plot( roots.k(valid) ,real(roots.omega(valid)),<span class="string">'*'</span>); grid <span class="string">on</span>;
+ xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'frequency'</span>);
+ title(<span class="string">'zeros of dispersion relation'</span>)
+
+  figure;
+ plot(roots.k(valid) ,-imag(roots.omega(valid)),<span class="string">'*'</span>); grid <span class="string">on</span>;
+ xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'damping rate'</span>);
+ title(<span class="string">'zeros of dispersion relation'</span>)
+
+
+
+
+
+
+ drawnow;
+</pre><pre class="codeoutput">Found 24 roots 
+</pre><img vspace="5" hspace="5" src="dispersion_landau2_01.png" alt=""> <img vspace="5" hspace="5" src="dispersion_landau2_02.png" alt=""> <img vspace="5" hspace="5" src="dispersion_landau2_03.png" alt=""> <img vspace="5" hspace="5" src="dispersion_landau2_04.png" alt=""> <h2>Standard test case <img src="dispersion_landau2_eq06275644584437600454.png" alt="$k=0.5$"><a name="11"></a></h2><p>Found the following zeros for the dispersion relation for the standard test case <img src="dispersion_landau2_eq06275644584437600454.png" alt="$k=0.5$"></p><pre class="codeinput">disp(roots.omega(roots.k==0.5))
+</pre><pre class="codeoutput">  Columns 1 through 4
+   1.3784 - 0.2396i  -1.3784 - 0.2396i  -0.0000 + 1.4198i   2.0864 - 1.6023i
+  Column 5
+  -2.0864 - 1.6023i
+</pre><h2>VPA Newton-Raphson refinement<a name="12"></a></h2><p>Set the number of significant decimal digits for variable-precision arithmetic</p><pre class="codeinput">digits(64);
+
+maxit=20;  <span class="comment">% Maximum number of iterations</span>
+
+k=vpa(roots.k);
+w=vpa(roots.omega);
+
+newton_step=simplify(D/diff(D,omega));
+<span class="keyword">for</span> it=1:maxit
+    tic;
+    w=w-vpa(newton_step(w,k));
+    toc;
+<span class="keyword">end</span>
+
+
+roots_vpa=struct(<span class="string">'k'</span>,k,<span class="string">'omega'</span>,w,<span class="string">'residual'</span>, vpa(abs(D(w,k))));
+
+<span class="comment">% Select a tolerance</span>
+valid=roots_vpa.residual&lt;1e-7;
+
+
+figure;
+plot( roots_vpa.k(valid) , <span class="keyword">...</span>
+    real(roots_vpa.omega(valid)),<span class="string">'*'</span>);
+grid <span class="string">on</span>;
+xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'frequency'</span>);
+title(<span class="string">'zeros of dispersion relation'</span>)
+
+figure;
+plot(roots_vpa.k(valid) ,<span class="keyword">...</span>
+    -imag(roots_vpa.omega(valid)),<span class="string">'*'</span>);
+grid <span class="string">on</span>;
+xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'damping rate'</span>);
+title(<span class="string">'zeros of dispersion relation'</span>)
+drawnow;
+</pre><pre class="codeoutput">Elapsed time is 0.239501 seconds.
+Elapsed time is 0.277778 seconds.
+Elapsed time is 0.270950 seconds.
+Elapsed time is 0.146284 seconds.
+Elapsed time is 0.264128 seconds.
+Elapsed time is 0.211193 seconds.
+Elapsed time is 0.204703 seconds.
+Elapsed time is 0.264431 seconds.
+Elapsed time is 0.141881 seconds.
+Elapsed time is 0.264735 seconds.
+Elapsed time is 0.202876 seconds.
+Elapsed time is 0.144182 seconds.
+Elapsed time is 0.267936 seconds.
+Elapsed time is 0.203255 seconds.
+Elapsed time is 0.140247 seconds.
+Elapsed time is 0.269328 seconds.
+Elapsed time is 0.208451 seconds.
+Elapsed time is 0.130255 seconds.
+Elapsed time is 0.260191 seconds.
+Elapsed time is 0.190081 seconds.
+</pre><img vspace="5" hspace="5" src="dispersion_landau2_05.png" alt=""> <img vspace="5" hspace="5" src="dispersion_landau2_06.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Dispersion relation for Landau Damping
+% Author: *Jakob Ameres* <http://jakobameres.com jakobameres.com>
+%
+% Use MATLABs symbolic toolbox, and define
+% frequency $\omega$, wave vector $k$
+syms omega k x
+
+
+% Set up grid of wave vectors the dispersion relation should be solved for
+% kgrid=0.01:0.005:0.6;
+kgrid=0.05:0.05:0.6;
+
+%% Plasma dispersion function Z(x)
+% The plasma dispersion function can be found in many textbooks
+%
+% $$ Z(x)= \frac{1}{\sqrt{\pi}} \int_{\gamma}
+%    \frac{ \mathrm{e}^{-z^2}}{z-x} \mathrm{d}z$$
+Z=symfun( sqrt(sym(pi))*exp(-x^2)*(1j-erfi(x)),x);
+
+
+
+%% Dispersion relation
+% The dispersion relation for the Vlasov-Poisson system with an initial state
+% Maxwellian (set $\alpha=1$)
+%
+% $$f_0(t=0,x,v)=\frac{\alpha}{\sqrt{2 \pi} v_{th}}
+%       \mathrm{e}^{-\frac{(v-v_0)^2 }{2 v_{th}^2 }} $$
+%
+% with thermal velocity $v_{th}$,
+% mean velocity $v_0$ and plasma frequency $\omega_p$ is given as
+%
+% $$  D(\omega,k)= 1 + \alpha \left( \frac{\omega_p}{k v_{th}} \right)^2
+%  \left[1+ \frac{1}{\sqrt{2} v_{th} } \left( \frac{\omega}{k} - v_0 \right)
+%   Z\left( \frac{1}{\sqrt{2} v_{th} } \left( \frac{\omega}{k} - v_0 \right)
+%   \right) \right] $$.
+%
+% Set parameters
+vth=1;    % Thermal velocity of electrons
+omegap=1; % Plasma frequency
+alpha=1;  % Normalization
+v0=0;     % Mean velocity
+
+% Dispersion relation in symbolic variables
+D=symfun(1+ alpha*(omegap/vth/k)^2*(1+ (omega/k-v0)/vth/sqrt(2)*...
+    Z((omega/k-v0)/vth/sqrt(2))), ...
+    [omega,k]);
+
+
+
+%% Problem Parameters
+% Use MATLABS internal variable precision arithmetic to evaluate the
+% Dispersion relation on the contour of a circle in the complex
+% plane with radius _radius_.
+% For all
+% $ k \in$ _kgrid_ we search for
+% $\omega \in C$ with
+% $|\omega| \leq$ _radius_.
+%
+radius=3; %
+n=256;    % Number of unit roots, increase for precision
+
+%%
+% Roots of unity in symbolic expression
+% zk=vpa(exp(1j*2*sym('pi')*(0:n-1)/n));
+% 
+% $$ z_k= \mathrm{e}^{ 2 \pi \mathrm{i} \frac{k}{n} },
+%   k=0, \dots, n-1 $$   
+%
+zk=exp(sym('1j*2*pi')*(0:n-1)/n);
+
+% Number of zeroes to retrieve K<<n
+K=5;  
+K=min(K,n/2-1); %allowed maximum
+% intK=(diff(D,omega)/D/(sym('2*pi*1j')));
+% mean(double(intK(zk,kgrid(4))))
+
+
+% Define double precision evaluations for vectorization
+residual=matlabFunction(abs(D),'Vars',[omega,k]);
+
+%Structure containing found roots in loose order
+roots=struct('omega',[],'k',[],'residual',[]);
+num_roots=0;
+
+for idx=1:length(kgrid)
+    
+    % Print status
+    fprintf('k= %08.4f,  %05.2f%%\n',...
+        kgrid(idx), (idx-1)/length(kgrid)*100);
+    
+    % Alternative: use the ratdisk_K method
+     %gk=double(vpa(1./D(zk*radius,kgrid(idx))));
+     %[r,a,b,mu,nu,w] = ratdisk(gk, n-1-K, K);
+    
+    %% Compute Zeroes and Poles by Cauchy Integrals
+    % Algorithm [Cz2] taken from
+    %
+    % NUMERICAL ALGORITHMS BASED ON ANALYTIC FUNCTION VALUES AT ROOTS OF
+    % UNITY,
+    % ANTHONY P. AUSTIN , PETER KRAVANJA , AND LLOYD N. TREFETHEN,
+    % SIAM J. NUMER. ANAL. Vol. 52, No. 4, pp. 1795–1821,
+    %
+    s = ifft(double(1./D( zk*radius, kgrid(idx)  )));
+    H = hankel(s(2:K+1), s(K+1:2*K));
+    H2 = hankel(s(3:K+2), s(K+2:2*K+1));
+    w = eig(H2,H);
+    
+    w=w*radius;
+    
+    %%
+    % Evaluate residual
+    % $|D(\omega,k)|$
+    %
+    res=residual(w,kgrid(idx));
+    
+    
+    % Delete invalid zeroes
+    valid=(abs(w)<radius & ~isinf(res) & ~isnan(res));
+    res=res(valid);
+    w=w(valid);
+    
+    % Sort by residual
+    [res,I]=sort(abs(res));
+    w=w(I);
+    
+    % append new roots
+    roots=[roots, struct('omega',w.',...
+        'k',ones(1,length(w))*kgrid(idx) ,...
+        'residual',res.')];
+end
+
+% Rearrange structure and sort by residual
+roots=struct('omega',[roots.omega],'k',[roots.k],...
+                   'residual',[roots.residual]);
+[~,I]=sort(roots.residual);
+roots.omega=roots.omega(I);
+roots.residual=roots.residual(I);
+roots.k=roots.k(I);
+
+
+%% Discussion
+%
+figure;
+plot(real(roots.omega), imag(roots.omega),'*'); hold on;
+plot(radius*cos(linspace(0,2*pi)),radius*sin(linspace(0,2*pi)),'k-');
+title('roots ');
+xlabel('real'); ylabel('imaginary');
+axis equal; grid on;
+
+
+
+figure;
+semilogy(roots.residual);
+ylabel('residual');
+xlabel('root No.');
+grid on;
+
+
+tol=1;
+valid=roots.residual<tol;
+
+
+
+fprintf('Found %d roots \n', sum(valid));
+
+figure;
+ plot( roots.k(valid) ,real(roots.omega(valid)),'*'); grid on;
+ xlabel('k'); ylabel('frequency');
+ title('zeros of dispersion relation')
+
+  figure;
+ plot(roots.k(valid) ,-imag(roots.omega(valid)),'*'); grid on;
+ xlabel('k'); ylabel('damping rate');
+ title('zeros of dispersion relation')
+
+ 
+ 
+ 
+ 
+ 
+ drawnow;
+
+
+
+
+%% Standard test case $k=0.5$
+% Found the following zeros for the dispersion relation for
+% the standard test case $k=0.5$
+%
+%
+disp(roots.omega(roots.k==0.5))
+
+%% VPA Newton-Raphson refinement
+% Set the number of significant decimal digits
+% for variable-precision arithmetic
+digits(64);
+
+maxit=20;  % Maximum number of iterations
+
+k=vpa(roots.k);
+w=vpa(roots.omega);
+
+newton_step=simplify(D/diff(D,omega));
+for it=1:maxit
+    tic;
+    w=w-vpa(newton_step(w,k));
+    toc;
+end
+
+
+roots_vpa=struct('k',k,'omega',w,'residual', vpa(abs(D(w,k))));
+
+% Select a tolerance
+valid=roots_vpa.residual<1e-7;
+
+
+figure;
+plot( roots_vpa.k(valid) , ...
+    real(roots_vpa.omega(valid)),'*');
+grid on;
+xlabel('k'); ylabel('frequency');
+title('zeros of dispersion relation')
+
+figure;
+plot(roots_vpa.k(valid) ,...
+    -imag(roots_vpa.omega(valid)),'*');
+grid on;
+xlabel('k'); ylabel('damping rate');
+title('zeros of dispersion relation')
+drawnow;
+
+##### SOURCE END #####
+--></body></html>

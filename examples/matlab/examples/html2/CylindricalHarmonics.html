@@ -1,0 +1,646 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>CylindricalHarmonics</title><meta name="generator" content="MATLAB 9.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-15"><meta name="DC.source" content="CylindricalHarmonics.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Coordinate transformation</a></li><li><a href="#5">Visualization</a></li><li><a href="#7">Spectrum of the <img src="CylindricalHarmonics_eq11809360406450963432.png" alt="$L^2$"> projection</a></li><li><a href="#8">Harmonics of L^2 projection</a></li><li><a href="#9">Filtering</a></li><li><a href="#10">Filtering changes global spectrum of operator</a></li><li><a href="#11">Harmonics of Laplace operator</a></li></ul></div><pre class="codeinput">clear <span class="string">all</span>; close <span class="string">all</span>;
+<span class="comment">%parameters</span>
+syms <span class="string">R0</span>;
+syms <span class="string">r</span> <span class="string">theta</span> <span class="string">phi</span> <span class="string">x</span> <span class="string">y</span> <span class="string">z</span>;
+
+assumeAlso(0&lt;=phi&lt;=2*pi);
+assumeAlso(0&lt;=theta&lt;=2*pi);
+assumeAlso(r&gt;0);
+assumeAlso(R0&gt;r);
+assumeAlso(R0-r&gt;0);
+assumeAlso(R0&gt;0);
+</pre><h2>Coordinate transformation<a name="2"></a></h2><p>The coordinate transformation for a torus T=[(R0+ r.*cos(theta)).*cos(phi)    ; ...    (R0+ r.*cos(theta)).*sin(phi);...    r.*sin(theta)]; The coordinate transformation for a cylinder</p><pre class="codeinput">T=[r.*cos(theta); <span class="keyword">...</span>
+    phi;<span class="keyword">...</span>
+   r.*sin(theta)];
+
+
+
+<span class="comment">% Cartesian coordinates as function Handles</span>
+X=matlabFunction( T(1,:),<span class="string">'Vars'</span>,[r,theta,phi,R0]);
+Y=matlabFunction( T(2,:),<span class="string">'Vars'</span>,[r,theta,phi,R0]);
+Z=matlabFunction( T(3,:),<span class="string">'Vars'</span>,[r,theta,phi,R0]);
+</pre><p>Jacobi matrix of the transformation</p><pre class="codeinput">J_T= simplify(jacobian(T', [r theta phi]));
+<span class="comment">% Inverse of Jacobi matrix</span>
+J_T_inv=simplify(inv(J_T),<span class="string">'Steps'</span>, 10);
+</pre><pre class="codeinput">L=-simplify(J_T_inv*J_T_inv'*det(J_T));
+
+<span class="comment">% Tnteger modes</span>
+syms <span class="string">n</span> <span class="string">m</span> <span class="string">integer</span>;
+
+<span class="comment">% Basis function constant in r</span>
+psi=symfun(exp(1j*(n*phi+m*theta)),[m,n]);
+<span class="comment">% Gradient of basis function</span>
+psi_grad=gradient(psi,[r theta phi]);
+
+syms <span class="string">m1</span> <span class="string">n1</span> <span class="string">m2</span> <span class="string">n2</span>;
+<span class="comment">%</span>
+<span class="comment">% K=symfun(simplify(psi_grad(m1,n1)'*L*psi_grad(m2,n2)),...</span>
+<span class="comment">%      [m1,n1,m2,n2]);</span>
+
+
+M=simplify(psi(m1,n1)'*psi(m2,n2)*-det(J_T));
+<span class="comment">% M=simplify(subs(subs(M,'r',1),'R0',5));</span>
+
+M=symfun(M,[m1,m2,n1,n2]);
+
+num_theta=3; num_phi=2;
+[m,n]=ndgrid( -num_theta:1:num_theta, -num_phi:1:num_phi);
+m=reshape(m,numel(m),1);
+n=reshape(n,numel(n),1);
+nm=[n,m];
+
+
+
+MM=sym(zeros((num_theta*2+1)*(num_phi*2+1)));
+<span class="keyword">for</span> idx=1:length(nm)
+   <span class="keyword">for</span> jdx=idx:length(nm)
+       MM(idx,jdx)=int(int(<span class="keyword">...</span>
+           M(nm(idx,2),nm(jdx,2),nm(idx,1),nm(jdx,1)),<span class="keyword">...</span>
+           phi,0,2*sym(<span class="string">'pi'</span>)),theta,0,2*sym(<span class="string">'pi'</span>));
+   <span class="keyword">end</span>
+<span class="keyword">end</span>
+MM=MM+MM'-diag(diag(MM));
+
+<span class="comment">% Plot sparsity pattern</span>
+spy(MM);
+title(<span class="string">'sparsity pattern for L^2 projection'</span>);
+</pre><img vspace="5" hspace="5" src="CylindricalHarmonics_01.png" alt=""> <h2>Visualization<a name="5"></a></h2><p>Set up grid in theta-phi plane for visulization</p><pre class="codeinput">[THETA,PHI]=ndgrid(linspace(0,2*pi,200),<span class="keyword">...</span>
+     linspace(0,2*pi*2/3,200));
+</pre><p>ASDEX Upgrade geometry</p><pre class="codeinput">minorR=0.8; <span class="comment">%minor radius</span>
+majorR=1.65; <span class="comment">%major radius</span>
+
+<span class="comment">% Get cartesian coordinates</span>
+XX=X(minorR, THETA,PHI,majorR);
+YY=Y(minorR, THETA,PHI,majorR);
+ZZ=Z(minorR, THETA,PHI,majorR);
+
+figure;
+surf(XX,YY, ZZ);
+axis <span class="string">equal</span>; grid <span class="string">on</span>; colormap <span class="string">jet</span>; shading <span class="string">interp</span>;
+title(<span class="string">'domain'</span>);
+</pre><img vspace="5" hspace="5" src="CylindricalHarmonics_02.png" alt=""> <h2>Spectrum of the <img src="CylindricalHarmonics_eq11809360406450963432.png" alt="$L^2$"> projection<a name="7"></a></h2><pre class="codeinput"><span class="comment">%Get symbolic eigenvectors and eigenvalues</span>
+[MM_V,MM_D]=eig(MM);
+
+<span class="comment">% Sort eigenvalues, eigenvectors for the given parameters</span>
+[D,idx]=sort(double(subs(subs(diag(MM_D),r,minorR),R0,majorR)));
+V=MM_V(:,idx);
+V=double(subs(subs(V,r,minorR),R0,majorR));
+
+figure;
+plot(D,<span class="string">'*-'</span>);
+xlabel(<span class="string">'harmonic No.'</span>);
+ylabel(<span class="string">'eigenvalue'</span>);
+<span class="comment">%axis([1,length(D),-inf,inf]);</span>
+title(<span class="string">'eigenvalues of L^2 projection'</span>); grid <span class="string">on</span>;
+</pre><img vspace="5" hspace="5" src="CylindricalHarmonics_03.png" alt=""> <h2>Harmonics of L^2 projection<a name="8"></a></h2><pre class="codeinput">figure;
+<span class="keyword">for</span> idx=1:size(V,2)
+
+    figure;
+    coeffs=V(:,idx);
+    modes=nm(coeffs~=0,:);
+    coeffs=coeffs(coeffs~=0);
+    fun=0;
+    <span class="keyword">for</span> jdx=1:size(modes,1)
+        fun=fun+coeffs(jdx)*exp(1j*<span class="keyword">...</span>
+            (modes(jdx,1)*PHI+(modes(jdx,2)*THETA)));
+    <span class="keyword">end</span>
+    surf(XX,YY, ZZ,real(fun)*D(idx));
+    axis <span class="string">equal</span>; grid <span class="string">on</span>; colormap <span class="string">jet</span>; shading <span class="string">interp</span>;
+    colorbar;
+    title(sprintf(<span class="string">'harmonic No. %d (real part)'</span>, idx));
+
+
+str=cell(size(modes,1)+1,1);
+str{1}=<span class="string">'  n   m'</span>;
+<span class="keyword">for</span> kdx=1:size(modes,1)
+str{kdx+1}=sprintf(<span class="string">'%3d %3d'</span>, modes(kdx,1),modes(kdx,2));
+<span class="keyword">end</span>
+dim = [0 0 0.3 0.3];
+
+annotation(<span class="string">'textbox'</span>,dim,<span class="string">'String'</span>,str,<span class="string">'FitBoxToText'</span>,<span class="string">'on'</span>);
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="CylindricalHarmonics_04.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_05.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_06.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_07.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_08.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_09.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_10.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_11.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_12.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_13.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_14.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_15.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_16.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_17.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_18.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_19.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_20.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_21.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_22.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_23.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_24.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_25.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_26.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_27.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_28.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_29.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_30.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_31.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_32.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_33.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_34.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_35.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_36.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_37.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_38.png" alt=""> <img vspace="5" hspace="5" src="CylindricalHarmonics_39.png" alt=""> <h2>Filtering<a name="9"></a></h2><p>The standard approach is to keep just a certain set of Fourier modes this corresponds to ommiting one basis function and its complex conjugate</p><pre class="codeinput">filter.nm=[2 3];
+
+<span class="comment">% assemble filter matrix</span>
+filter.mat=eye(size(MM));
+
+<span class="comment">%delete mode ...</span>
+idx=find((nm(:,1)==filter.nm(1) &amp; nm(:,2)==filter.nm(2)));
+filter.mat(idx,idx)=0;
+<span class="comment">%and complex conjugate</span>
+idx=find((nm(:,1)==-filter.nm(1) &amp; nm(:,2)==-filter.nm(2)));
+filter.mat(idx,idx)=0;
+
+<span class="comment">%Apply filter</span>
+filter.MM=filter.mat'*MM*filter.mat;
+
+
+<span class="comment">%Calculate eigenvalues of filtered matrix</span>
+filter.D=eig(double(subs(subs(filter.MM,r,minorR),R0,majorR)));
+filter.D(filter.D==0)=[];
+
+<span class="comment">% Eigenvalues of original matrix</span>
+d1=eig(double(subs(subs(MM,r,minorR),R0,majorR)));
+<span class="comment">% Eigen</span>
+d2=eig(double(subs(subs(filter.MM,r,minorR),R0,majorR)));
+d2(d2==0)=[];
+</pre><h2>Filtering changes global spectrum of operator<a name="10"></a></h2><p>Whereas filtering directly the eigenvalues leaves the spectrum untouched and acts only locally. This also works in radial direction</p><pre class="codeinput">figure
+plot(D,<span class="string">'*-'</span>); hold <span class="string">on</span>;
+plot(filter.D,<span class="string">'*-'</span>);
+legend(<span class="string">'original'</span>,<span class="string">'mode filtered'</span>);
+title(<span class="string">'eigenvalues of L^2 projection'</span>); grid <span class="string">on</span>;
+</pre><img vspace="5" hspace="5" src="CylindricalHarmonics_40.png" alt=""> <h2>Harmonics of Laplace operator<a name="11"></a></h2><p>Todo</p><pre class="codeinput"><span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% sort(diag(U))</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% Mint=matlabFunction(M,'Vars',[theta,phi,m1,m2,n1,n2]);</span>
+<span class="comment">%</span>
+<span class="comment">% num_theta=5; num_phi=5;</span>
+<span class="comment">% [m,n]=ndgrid( -num_theta:1:num_theta, -num_phi:1:num_phi);</span>
+<span class="comment">% m=reshape(m,numel(m),1);</span>
+<span class="comment">% n=reshape(n,numel(n),1);</span>
+<span class="comment">% nm=[n,m];</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% M=zeros((num_theta*2+1)*(num_phi*2+1));</span>
+<span class="comment">% for idx=1:length(nm)</span>
+<span class="comment">%    for jdx=idx:length(nm)</span>
+<span class="comment">%        M(idx,jdx)=sum(sum(Mint(THETA,PHI,...</span>
+<span class="comment">%            nm(idx,2),nm(jdx,2),nm(idx,1),nm(jdx,1))))...</span>
+<span class="comment">%            *(2*pi/length(int_grid))^2;</span>
+<span class="comment">%    end</span>
+<span class="comment">% end</span>
+<span class="comment">% M(abs(M)&lt;1e-13)=0;</span>
+<span class="comment">% M=M+M'-diag(diag(M));</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% abs(nm)==0</span>
+<span class="comment">% size(M)</span>
+<span class="comment">% rank(M)</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% K=psi_grad(m1,n1)'*L*psi_grad(m2,n2);</span>
+<span class="comment">% K=subs(subs(K,'r',1),'R0',5);</span>
+<span class="comment">% K=simplify(K);</span>
+<span class="comment">%</span>
+<span class="comment">% disp(K)</span>
+<span class="comment">% % int(int(psi_grad(m1,n1)'*L*psi_grad(m2,n2),phi,0,2*pi),theta,0,2*pi)</span>
+<span class="comment">%</span>
+<span class="comment">% %K_mn=int(int(K_mn, theta,0,2*pi),phi,0,2*pi);</span>
+<span class="comment">%</span>
+<span class="comment">% Kint=matlabFunction(K,'Vars',[theta,phi,m1,n1,m2,n2]);</span>
+<span class="comment">%</span>
+<span class="comment">% real(K)</span>
+<span class="comment">% integral2(@(x,y)real(Kint(x,y,1,1,3,3)),0,2*pi,0,2*pi)</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% integral( @(x)exp(1j*(1)*x),0,2*pi)</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% K_mn=simplify(int(K, phi,0,2*pi));</span>
+<span class="comment">%</span>
+<span class="comment">% simplify(K_mn)</span>
+<span class="comment">%</span>
+<span class="comment">% simplify(K_mn(2,2,3,3))</span>
+<span class="comment">%</span>
+<span class="comment">% int(K</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% int(exp(1j*(n1-n2)*theta),0,2*pi)</span>
+<span class="comment">%</span>
+<span class="comment">% K_mn(nm)</span>
+<span class="comment">%</span>
+<span class="comment">% K=zeros(num_phi*num_theta);</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% nm=1;</span>
+<span class="comment">% n=1;</span>
+<span class="comment">% for idx=1:size(K,1)</span>
+<span class="comment">%</span>
+<span class="comment">% for jdx=idx:size(K,1)</span>
+<span class="comment">%</span>
+<span class="comment">% end</span>
+<span class="comment">%</span>
+<span class="comment">% end</span>
+<span class="comment">%</span>
+<span class="comment">% subs(L)</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% %% Flux surface</span>
+<span class="comment">% % We fix _r_ to describe a single flux surface.</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% r=1;</span>
+<span class="comment">% R0=4;</span>
+<span class="comment">%</span>
+<span class="comment">% syms R0 r;</span>
+<span class="comment">%</span>
+<span class="comment">% [V,D]=eig([ 2*pi*R0*r, pi*r^2; pi*r^2, 2*pi*R0*r]);</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clear all; close all;
+%parameters
+syms R0;
+syms r theta phi x y z;
+
+assumeAlso(0<=phi<=2*pi);
+assumeAlso(0<=theta<=2*pi);
+assumeAlso(r>0);
+assumeAlso(R0>r);
+assumeAlso(R0-r>0);
+assumeAlso(R0>0);
+
+
+
+%% Coordinate transformation
+% The coordinate transformation for a torus
+% T=[(R0+ r.*cos(theta)).*cos(phi)    ; ...
+%    (R0+ r.*cos(theta)).*sin(phi);...
+%    r.*sin(theta)];
+% The coordinate transformation for a cylinder
+T=[r.*cos(theta); ...
+    phi;...
+   r.*sin(theta)];
+
+
+
+% Cartesian coordinates as function Handles
+X=matlabFunction( T(1,:),'Vars',[r,theta,phi,R0]);
+Y=matlabFunction( T(2,:),'Vars',[r,theta,phi,R0]);
+Z=matlabFunction( T(3,:),'Vars',[r,theta,phi,R0]);
+
+
+%% 
+% Jacobi matrix of the transformation
+J_T= simplify(jacobian(T', [r theta phi]));
+% Inverse of Jacobi matrix
+J_T_inv=simplify(inv(J_T),'Steps', 10);
+
+
+%%
+L=-simplify(J_T_inv*J_T_inv'*det(J_T));
+
+% Tnteger modes
+syms n m integer;
+
+% Basis function constant in r
+psi=symfun(exp(1j*(n*phi+m*theta)),[m,n]);
+% Gradient of basis function
+psi_grad=gradient(psi,[r theta phi]);
+
+syms m1 n1 m2 n2;
+% 
+% K=symfun(simplify(psi_grad(m1,n1)'*L*psi_grad(m2,n2)),...
+%      [m1,n1,m2,n2]);
+
+
+M=simplify(psi(m1,n1)'*psi(m2,n2)*-det(J_T));
+% M=simplify(subs(subs(M,'r',1),'R0',5));
+
+M=symfun(M,[m1,m2,n1,n2]);
+
+num_theta=3; num_phi=2;
+[m,n]=ndgrid( -num_theta:1:num_theta, -num_phi:1:num_phi);
+m=reshape(m,numel(m),1);
+n=reshape(n,numel(n),1);
+nm=[n,m];
+
+
+
+MM=sym(zeros((num_theta*2+1)*(num_phi*2+1)));
+for idx=1:length(nm)
+   for jdx=idx:length(nm)
+       MM(idx,jdx)=int(int(...
+           M(nm(idx,2),nm(jdx,2),nm(idx,1),nm(jdx,1)),...
+           phi,0,2*sym('pi')),theta,0,2*sym('pi'));
+   end
+end
+MM=MM+MM'-diag(diag(MM));
+
+% Plot sparsity pattern
+spy(MM);
+title('sparsity pattern for L^2 projection');
+
+
+%% Visualization
+% Set up grid in theta-phi plane for visulization
+[THETA,PHI]=ndgrid(linspace(0,2*pi,200),...
+     linspace(0,2*pi*2/3,200));
+
+%%
+% ASDEX Upgrade geometry
+minorR=0.8; %minor radius
+majorR=1.65; %major radius
+
+% Get cartesian coordinates
+XX=X(minorR, THETA,PHI,majorR);
+YY=Y(minorR, THETA,PHI,majorR);
+ZZ=Z(minorR, THETA,PHI,majorR);
+
+figure;
+surf(XX,YY, ZZ);
+axis equal; grid on; colormap jet; shading interp;
+title('domain');
+
+%% Spectrum of the $L^2$ projection
+% 
+
+%Get symbolic eigenvectors and eigenvalues
+[MM_V,MM_D]=eig(MM);
+
+% Sort eigenvalues, eigenvectors for the given parameters
+[D,idx]=sort(double(subs(subs(diag(MM_D),r,minorR),R0,majorR)));
+V=MM_V(:,idx);
+V=double(subs(subs(V,r,minorR),R0,majorR));
+
+figure;
+plot(D,'*-');
+xlabel('harmonic No.');
+ylabel('eigenvalue');
+%axis([1,length(D),-inf,inf]);
+title('eigenvalues of L^2 projection'); grid on;
+
+
+
+%% Harmonics of L^2 projection
+%
+figure;
+for idx=1:size(V,2)
+
+    figure;
+    coeffs=V(:,idx);
+    modes=nm(coeffs~=0,:);
+    coeffs=coeffs(coeffs~=0);
+    fun=0;
+    for jdx=1:size(modes,1)
+        fun=fun+coeffs(jdx)*exp(1j*...
+            (modes(jdx,1)*PHI+(modes(jdx,2)*THETA)));
+    end
+    surf(XX,YY, ZZ,real(fun)*D(idx));
+    axis equal; grid on; colormap jet; shading interp;
+    colorbar;
+    title(sprintf('harmonic No. %d (real part)', idx));
+    
+    
+str=cell(size(modes,1)+1,1);
+str{1}='  n   m';
+for kdx=1:size(modes,1)
+str{kdx+1}=sprintf('%3d %3d', modes(kdx,1),modes(kdx,2));
+end
+dim = [0 0 0.3 0.3];
+
+annotation('textbox',dim,'String',str,'FitBoxToText','on');
+
+end
+
+
+%% Filtering 
+% 
+% The standard approach is to keep just a certain set of Fourier modes
+% this corresponds to ommiting one basis function and its complex
+% conjugate
+
+filter.nm=[2 3];
+
+% assemble filter matrix
+filter.mat=eye(size(MM));
+
+%delete mode ...
+idx=find((nm(:,1)==filter.nm(1) & nm(:,2)==filter.nm(2)));
+filter.mat(idx,idx)=0;
+%and complex conjugate
+idx=find((nm(:,1)==-filter.nm(1) & nm(:,2)==-filter.nm(2)));
+filter.mat(idx,idx)=0;
+
+%Apply filter
+filter.MM=filter.mat'*MM*filter.mat;
+
+
+%Calculate eigenvalues of filtered matrix
+filter.D=eig(double(subs(subs(filter.MM,r,minorR),R0,majorR)));
+filter.D(filter.D==0)=[];
+
+% Eigenvalues of original matrix
+d1=eig(double(subs(subs(MM,r,minorR),R0,majorR)));
+% Eigen
+d2=eig(double(subs(subs(filter.MM,r,minorR),R0,majorR)));
+d2(d2==0)=[];
+
+
+
+%% Filtering changes global spectrum of operator
+% Whereas filtering directly the eigenvalues leaves the
+% spectrum untouched and acts only locally.
+% This also works in radial direction
+figure
+plot(D,'*-'); hold on;
+plot(filter.D,'*-');
+legend('original','mode filtered');
+title('eigenvalues of L^2 projection'); grid on;
+
+
+
+%% Harmonics of Laplace operator
+% Todo
+
+% 
+% 
+% 
+% 
+% sort(diag(U))
+% 
+% 
+% Mint=matlabFunction(M,'Vars',[theta,phi,m1,m2,n1,n2]);
+% 
+% num_theta=5; num_phi=5;
+% [m,n]=ndgrid( -num_theta:1:num_theta, -num_phi:1:num_phi);
+% m=reshape(m,numel(m),1);
+% n=reshape(n,numel(n),1);
+% nm=[n,m];
+% 
+% 
+% 
+% M=zeros((num_theta*2+1)*(num_phi*2+1));
+% for idx=1:length(nm)
+%    for jdx=idx:length(nm)
+%        M(idx,jdx)=sum(sum(Mint(THETA,PHI,...
+%            nm(idx,2),nm(jdx,2),nm(idx,1),nm(jdx,1))))...
+%            *(2*pi/length(int_grid))^2;
+%    end
+% end
+% M(abs(M)<1e-13)=0;
+% M=M+M'-diag(diag(M));
+% 
+% 
+% abs(nm)==0
+% size(M)
+% rank(M)
+% 
+% 
+% 
+% K=psi_grad(m1,n1)'*L*psi_grad(m2,n2);
+% K=subs(subs(K,'r',1),'R0',5);
+% K=simplify(K);
+% 
+% disp(K)
+% % int(int(psi_grad(m1,n1)'*L*psi_grad(m2,n2),phi,0,2*pi),theta,0,2*pi)
+% 
+% %K_mn=int(int(K_mn, theta,0,2*pi),phi,0,2*pi);
+% 
+% Kint=matlabFunction(K,'Vars',[theta,phi,m1,n1,m2,n2]);
+% 
+% real(K)
+% integral2(@(x,y)real(Kint(x,y,1,1,3,3)),0,2*pi,0,2*pi)
+% 
+% 
+% integral( @(x)exp(1j*(1)*x),0,2*pi)
+% 
+% 
+% 
+% K_mn=simplify(int(K, phi,0,2*pi));
+% 
+% simplify(K_mn)
+% 
+% simplify(K_mn(2,2,3,3))
+% 
+% int(K
+% 
+% 
+% 
+% 
+% 
+% int(exp(1j*(n1-n2)*theta),0,2*pi)
+% 
+% K_mn(nm)
+% 
+% K=zeros(num_phi*num_theta);
+% 
+% 
+% 
+% 
+% nm=1;
+% n=1;
+% for idx=1:size(K,1)
+% 
+% for jdx=idx:size(K,1)
+%     
+% end
+% 
+% end
+% 
+% subs(L)
+% 
+% 
+% 
+% 
+% 
+% 
+% %% Flux surface
+% % We fix _r_ to describe a single flux surface.
+% 
+% 
+% 
+% 
+% 
+% r=1;
+% R0=4;
+% 
+% syms R0 r;
+% 
+% [V,D]=eig([ 2*pi*R0*r, pi*r^2; pi*r^2, 2*pi*R0*r]);
+% 
+% 
+% 
+
+##### SOURCE END #####
+--></body></html>

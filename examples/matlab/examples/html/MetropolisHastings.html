@@ -1,0 +1,349 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Sample initial conditions by Metropolis-Hastings</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-13"><meta name="DC.source" content="MetropolisHastings.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Sample initial conditions by Metropolis-Hastings</h1><!--introduction--><p>Author: <b>Jakob Ameres</b> <a href="http://jakobameres.com">jakobameres.com</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#2">Markov Chain Monte Carlo</a></li><li><a href="#7">Plot samples in phase space</a></li><li><a href="#8">Visualize marginal distributions</a></li><li><a href="#9">Visualize phase space</a></li></ul></div><p>Initialize random seed to get same result every time</p><pre class="codeinput">rng(0);
+</pre><h2>Markov Chain Monte Carlo<a name="2"></a></h2><p>Metropolis-Hastings algorithm</p><pre class="codeinput">Np=1e4; <span class="comment">% Number of particles/samples</span>
+sigma=2;
+<span class="comment">%</span>
+<span class="comment">% Burn in phase. Skip samples at the beginning until the Markov chain</span>
+<span class="comment">% starts to mix</span>
+<span class="comment">%</span>
+burnin=100;
+</pre><p>Thinning. Skip samples to reduce correlation</p><pre class="codeinput">thin=10;
+</pre><p>Define a proposal density, here a Gaussian this means the markov chain will jump with normally distributed increases.</p><pre class="codeinput">Q=@(x,mu) exp(-0.5.*sum(x-mu,1).^2/sigma^2)/sqrt(2*pi)/sigma^2;
+</pre><p>The initial condition for the Landau damping example. <i>k</i> wave vector, <i>L</i> length of domain, <i>eps</i> amplitude of disturbance, <i>f0</i>(x,v) initial condition</p><pre class="codeinput">k=0.5;
+L=2*pi/k;
+eps=0.4;
+f0=@(x,v) (1+eps*cos(k*x))./sqrt(2*pi).*exp(-0.5.*v.^2);
+
+pdf=@(z) f0(z(1,:),z(2,:));
+
+
+
+
+zk=zeros(2,Np); <span class="comment">% Phase space coordinate _z_=(_x_,_v_)</span>
+z_old=[0;0]; <span class="comment">% Starting point</span>
+<span class="keyword">for</span> idx=-burnin:1:Np
+
+
+<span class="keyword">for</span> jdx=1:thin
+    <span class="comment">%Draw from Q</span>
+    z_new=randn(2,1)*sigma + z_old;
+    a=pdf(z_new)./pdf(z_old)*Q(z_old,z_new)./Q(z_new,z_old);
+
+    <span class="keyword">if</span> (a&gt;=1)
+        z_old=z_new;
+    <span class="keyword">else</span>
+        <span class="comment">%</span>
+        <span class="comment">% accept sample with probability _a_</span>
+        <span class="comment">%</span>
+        <span class="keyword">if</span> (rand(1,1)&lt;=a)
+            <span class="comment">% accept</span>
+            z_old=z_new;
+        <span class="keyword">else</span>
+            z_old=z_old;
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> (idx&gt;=1)
+    zk(:,idx)=z_old;
+<span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><p>Apply periodic boundary condition in first dimension</p><pre class="codeinput">zk(1,:)=mod(zk(1,:),L);
+</pre><h2>Plot samples in phase space<a name="7"></a></h2><pre class="codeinput">figure;
+title(<span class="string">'Metropolis-Hastings samples'</span>);
+plot(mod(zk(1,:),L),zk(2,:),<span class="string">'.'</span>);
+xlabel(<span class="string">'x'</span>); ylabel(<span class="string">'v'</span>);
+axis([0,L,-inf,inf]); axis <span class="string">equal</span>;
+grid <span class="string">on</span>;
+</pre><img vspace="5" hspace="5" src="MetropolisHastings_01.png" alt=""> <h2>Visualize marginal distributions<a name="8"></a></h2><p>We use a histogram with <i>100</i> particles per cell, and normalize the output such that we obtain the marginal probability density (pdf).</p><pre class="codeinput">figure;
+histogram(zk(2,:),Np/100,<span class="string">'Normalization'</span>,<span class="string">'pdf'</span>);
+grid <span class="string">on</span>;
+xlabel(<span class="string">'v'</span>);
+ylabel(<span class="string">' $\int f(x,v) dx$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>)
+title(<span class="string">'velocity density'</span>);
+
+figure;
+histogram(zk(1,:),Np/100,<span class="string">'Normalization'</span>,<span class="string">'pdf'</span>);
+grid <span class="string">on</span>;
+xlabel(<span class="string">'x'</span>);
+ylabel(<span class="string">'$\int f(x,v) dv$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>)
+title(<span class="string">'spatial density'</span>);
+</pre><img vspace="5" hspace="5" src="MetropolisHastings_02.png" alt=""> <img vspace="5" hspace="5" src="MetropolisHastings_03.png" alt=""> <h2>Visualize phase space<a name="9"></a></h2><p>with a phase space histogram</p><p>Parameters</p><pre class="codeinput">numx=50; <span class="comment">%Number of cells in x</span>
+numv=70; <span class="comment">%Number of cells in v</span>
+</pre><p>Adapt the velocity bin range to the data.</p><pre class="codeinput">vmin=min(zk(2,:));
+vmax=max(zk(2,:));
+
+
+<span class="comment">% Initialization</span>
+x=linspace(0,L,numx+1);  <span class="comment">%Bin edges can be nonuniform</span>
+v=linspace(vmin,vmax,numv+1);
+[xx,vv]=ndgrid(x(1:end-1),v(1:end-1)); <span class="comment">% mesh</span>
+<span class="comment">%Determine cell volume</span>
+vol=diff(x)'*diff(v);
+</pre><p>Kernel density estimator <i>f0_hat</i> of <i>f0</i> by a 2D histogram</p><pre class="codeinput">weight=ones(Np,1); <span class="comment">%Importance sampling by Metropolis hastings, up to</span>
+                   <span class="comment">% normalizing constant</span>
+[~,cellx]=histc(zk(1,:).',x); <span class="comment">%bin particles to cells</span>
+[~,cellv]=histc(zk(2,:).',v); <span class="comment">% and get the indicies</span>
+<span class="comment">%particles out of range are remapped, but not discarded</span>
+cellv=min(max(1,cellv), numv);
+
+<span class="comment">%Accumulate weight in boxes and normalize</span>
+f0_hat=accumarray( [cellx,cellv], weight,<span class="keyword">...</span>
+    [numx, numv])./vol./Np;
+</pre><p>Compare sampled density with original</p><pre class="codeinput">figure;
+pcolor(xx,vv,f0(xx,vv));
+xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'v'</span>);
+title(<span class="string">'original $f_0$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>)
+shading <span class="string">interp</span>;
+colormap <span class="string">jet</span>; colorbar;
+
+
+figure;
+pcolor(xx,vv,f0_hat);
+xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'v'</span>);
+title(<span class="string">'histogram estimator $\hat{f}_0$'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>)
+shading <span class="string">interp</span>;
+colormap <span class="string">jet</span>; colorbar;
+</pre><img vspace="5" hspace="5" src="MetropolisHastings_04.png" alt=""> <img vspace="5" hspace="5" src="MetropolisHastings_05.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Sample initial conditions by Metropolis-Hastings
+% Author: *Jakob Ameres* <http://jakobameres.com jakobameres.com>
+%
+% 
+
+%%
+% Initialize random seed to get same result every time
+%
+rng(0);
+
+
+%% Markov Chain Monte Carlo
+% Metropolis-Hastings algorithm
+Np=1e4; % Number of particles/samples
+sigma=2;
+%
+% Burn in phase. Skip samples at the beginning until the Markov chain
+% starts to mix
+%
+burnin=100;  
+
+%%
+% Thinning. Skip samples to reduce correlation
+%
+thin=10; 
+%%
+% Define a proposal density, here a Gaussian
+% this means the markov chain will jump with normally distributed
+% increases.
+% 
+Q=@(x,mu) exp(-0.5.*sum(x-mu,1).^2/sigma^2)/sqrt(2*pi)/sigma^2;
+
+%% 
+% The initial condition for the Landau damping example.
+% _k_ wave vector, _L_ length of domain, _eps_ amplitude of disturbance,
+% _f0_(x,v) initial condition
+%
+k=0.5; 
+L=2*pi/k;
+eps=0.4;
+f0=@(x,v) (1+eps*cos(k*x))./sqrt(2*pi).*exp(-0.5.*v.^2);
+
+pdf=@(z) f0(z(1,:),z(2,:));
+
+
+
+
+zk=zeros(2,Np); % Phase space coordinate _z_=(_x_,_v_)
+z_old=[0;0]; % Starting point
+for idx=-burnin:1:Np
+
+
+for jdx=1:thin
+    %Draw from Q
+    z_new=randn(2,1)*sigma + z_old;
+    a=pdf(z_new)./pdf(z_old)*Q(z_old,z_new)./Q(z_new,z_old);
+    
+    if (a>=1)
+        z_old=z_new;
+    else
+        %
+        % accept sample with probability _a_
+        %
+        if (rand(1,1)<=a)
+            % accept
+            z_old=z_new;
+        else
+            z_old=z_old;
+        end
+    end
+end
+
+if (idx>=1)
+    zk(:,idx)=z_old;
+end
+
+end
+
+%%
+% Apply periodic boundary condition in first dimension
+%
+zk(1,:)=mod(zk(1,:),L);
+
+
+%% Plot samples in phase space
+figure;
+title('Metropolis-Hastings samples');
+plot(mod(zk(1,:),L),zk(2,:),'.'); 
+xlabel('x'); ylabel('v');
+axis([0,L,-inf,inf]); axis equal;
+grid on;
+ 
+ 
+%% Visualize marginal distributions
+% We use a histogram with _100_ particles per cell,
+% and normalize the output such that we obtain the marginal probability
+% density (pdf).
+ 
+figure;
+histogram(zk(2,:),Np/100,'Normalization','pdf'); 
+grid on;
+xlabel('v');
+ylabel(' $\int f(x,v) dx$','interpreter','latex')
+title('velocity density');
+ 
+figure;
+histogram(zk(1,:),Np/100,'Normalization','pdf'); 
+grid on;
+xlabel('x');
+ylabel('$\int f(x,v) dv$','interpreter','latex')
+title('spatial density');
+
+ 
+
+
+%% Visualize phase space
+% with a phase space histogram
+%
+% Parameters
+numx=50; %Number of cells in x
+numv=70; %Number of cells in v
+%%
+% Adapt the velocity bin range to the data.
+%
+vmin=min(zk(2,:)); 
+vmax=max(zk(2,:));
+
+
+% Initialization
+x=linspace(0,L,numx+1);  %Bin edges can be nonuniform
+v=linspace(vmin,vmax,numv+1);
+[xx,vv]=ndgrid(x(1:end-1),v(1:end-1)); % mesh
+%Determine cell volume
+vol=diff(x)'*diff(v);
+
+
+%%
+% Kernel density estimator _f0_hat_ of _f0_ by a 2D histogram
+%
+weight=ones(Np,1); %Importance sampling by Metropolis hastings, up to
+                   % normalizing constant
+[~,cellx]=histc(zk(1,:).',x); %bin particles to cells
+[~,cellv]=histc(zk(2,:).',v); % and get the indicies
+%particles out of range are remapped, but not discarded
+cellv=min(max(1,cellv), numv);
+            
+%Accumulate weight in boxes and normalize
+f0_hat=accumarray( [cellx,cellv], weight,...
+    [numx, numv])./vol./Np;
+%%
+% Compare sampled density with original
+%
+figure;
+pcolor(xx,vv,f0(xx,vv));
+xlabel('x');ylabel('v');
+title('original $f_0$','interpreter','latex')
+shading interp; 
+colormap jet; colorbar;
+
+
+figure;
+pcolor(xx,vv,f0_hat);
+xlabel('x');ylabel('v');
+title('histogram estimator $\hat{f}_0$','interpreter','latex')
+shading interp; 
+colormap jet; colorbar;
+
+
+
+ 
+ 
+##### SOURCE END #####
+--></body></html>

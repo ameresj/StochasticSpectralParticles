@@ -1,0 +1,404 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Spectral 2D Vlasov-Poisson Solver</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-13"><meta name="DC.source" content="spectral_landau.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Spectral 2D Vlasov-Poisson Solver</h1><!--introduction--><p>Author: <b>Jakob Ameres</b> <a href="http://jakobameres.com">jakobameres.com</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Features</a></li><li><a href="#2">Landau Damping parameters</a></li><li><a href="#3">Define phase space mesh</a></li><li><a href="#4">Time integration scheme for symplectic runge kutta</a></li><li><a href="#5">Fourier transform in x</a></li><li><a href="#7">Loop over all stages of the symplectic Runge Kutta</a></li><li><a href="#9">Poisson equation</a></li><li><a href="#10">Advection in v</a></li><li><a href="#11">Advection in x</a></li><li><a href="#13">Visualize phase space</a></li><li><a href="#15">Discussion</a></li></ul></div><h2>Features<a name="1"></a></h2><div><ul><li>Spectral description of density</li><li><b>Symplectic</b> (for Vlasov-Poisson) Runge Kutta <b>time integrator</b></li></ul></div><h2>Landau Damping parameters<a name="2"></a></h2><pre class="codeinput">eps=0.05; <span class="comment">% Amplitude of perturbation, 0.05 for linear, 0.5 for nonlinear</span>
+kx=0.5;    <span class="comment">% Wave vector</span>
+L=2*pi/kx; <span class="comment">% length of domain</span>
+qm=-1;    <span class="comment">% negative charge to mass = electrons, $\frac{q}{m}=-1$</span>
+
+<span class="comment">% Initial condition</span>
+f0=@(x,v) (1+eps*cos(kx*x))./sqrt(2*pi).*exp(-0.5.*v.^2);
+<span class="comment">% Background to be subtracted from the phase space plot</span>
+background=@(x,v) 1./sqrt(2*pi).*exp(-0.5.*v.^2);
+<span class="comment">% External electric field</span>
+E_ext=@(x,t) 0.*x+0.*t;
+
+dt=0.1; <span class="comment">% Time step</span>
+tmax=50;
+rungekutta_order=3; <span class="comment">%Order of the runge Kutta time integrator</span>
+
+
+Nx=32; <span class="comment">% Number of cells in spatial direction</span>
+Nv=32; <span class="comment">% Number of cells in velocity direciton</span>
+vmax=4.5;
+vmin=-4.5;
+</pre><h2>Define phase space mesh<a name="3"></a></h2><pre class="codeinput">v=linspace(vmin,vmax,Nv+1).';v=v(1:end-1);
+x=linspace(0,L,Nx+1).';x=x(1:end-1);
+
+[XX,VV]=ndgrid(x,v);
+</pre><h2>Time integration scheme for symplectic runge kutta<a name="4"></a></h2><pre class="codeinput"><span class="keyword">switch</span> rungekutta_order
+    <span class="keyword">case</span> 1
+        rksd=[1, 0]; <span class="comment">%Symplectic Euler</span>
+        rksc=[0, 1];
+    <span class="keyword">case</span> 2
+        rksd=[0.5, 0.5 ];
+        rksc=[0, 1];
+    <span class="keyword">case</span> 3
+        rksd=[2/3, -2/3, 1  ];
+        rksc=[ 7/24, 3/4, -1/24];
+    <span class="keyword">case</span> 4
+        rk4sx=real((2^(1/3) +2^(-1/3)-1)/6);
+        rksd=[ 2*rk4sx +1 , -4*rk4sx-1, 2*rk4sx+1, 0];
+        rksc=[ rk4sx + 0.5 , -rk4sx, -rk4sx, rk4sx +0.5];
+<span class="keyword">end</span>
+
+<span class="comment">%Build Matrix for spatial advection and all stages</span>
+XSHIFT=zeros(Nx,Nv,length(rksd));
+m=fftshift(((1:Nx)-Nx/2-1));
+<span class="keyword">for</span> jdx=1:length(rksd)
+   XSHIFT(:,:,jdx)=exp((-1j*dt*rksd(jdx)*2*pi/L)*(v*m).');
+<span class="keyword">end</span>
+<span class="comment">%Preallocate matrix for velocity advection</span>
+VSHIFT=zeros(Nx,Nv);
+
+<span class="comment">%diagnostic</span>
+numt=ceil(tmax/dt);
+fieldenergy=zeros(numt,1);
+kineticenergy=zeros(numt,1);
+sh_entropy=zeros(numt,1); <span class="comment">%Shannon entropy</span>
+kl_entropy=zeros(numt,1); <span class="comment">%Kullback-Leibler entropy</span>
+
+EE=zeros(Nx,numt);
+
+
+<span class="comment">% Set initial condition</span>
+f=f0(XX,VV);
+</pre><h2>Fourier transform in x<a name="5"></a></h2><pre class="codeinput">f=fft(f,[],1);
+figure(<span class="string">'Name'</span>, <span class="string">'Phase Space Density'</span>, <span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+<span class="keyword">for</span> tdx=1:numt
+</pre><h2>Loop over all stages of the symplectic Runge Kutta<a name="7"></a></h2><pre class="codeinput">    <span class="keyword">for</span> sdx=1:length(rksd)
+</pre><h2>Poisson equation<a name="9"></a></h2><pre class="codeinput">        rho=sum(f,2)*(vmax-vmin)/Nv; <span class="comment">%rho(x) -&gt; integrate over v</span>
+        rho(1)=0; <span class="comment">%remove (ion) background</span>
+        E=rho./(-1j*(2*pi/L)*fftshift(((1:Nx)-Nx/2-1).'));
+        <span class="comment">% remove constant fourier mode</span>
+        E(1)=0;
+
+        <span class="keyword">if</span> (sdx==length(rksd))
+            fieldenergy(tdx)=sum(E'*E)/2; <span class="comment">%L2 norm of Electric field</span>
+            EE(:,tdx)=E;
+        <span class="keyword">end</span>
+
+        E=ifft(E,<span class="string">'symmetric'</span>);
+        E=E+E_ext(x,tdx*dt);
+        <span class="comment">%plot(x,ifft(E,'symmetric'));</span>
+</pre><h2>Advection in v<a name="10"></a></h2><pre class="codeinput">        f=ifft(f,[],1,<span class="string">'symmetric'</span>); <span class="comment">%back transform</span>
+        <span class="comment">% f is fully backtransformed, calculate diagnostics</span>
+        <span class="keyword">if</span> (sdx==length(rksd))
+            kineticenergy(tdx)=sum(f,1)*v.^2*(vmax-vmin)/Nv;
+            sh_entropy(tdx)=sum(sum(f.*log(abs(f))))*L/Nx*(vmax-vmin)/Nv;
+            kl_entropy(tdx)=sum(sum(f.*log(abs(f./f0(XX,VV)))))<span class="keyword">...</span>
+                *L/Nx*(vmax-vmin)/Nv;
+        <span class="keyword">end</span>
+
+        <span class="comment">% Fourier transform in v</span>
+        f=fft(f,[],2);
+        <span class="comment">% Build Matrix for spatial advection</span>
+         m=fftshift((1:Nv)  -Nv/2-1);
+         VSHIFT=exp((1j*dt*rksc(sdx)*2*pi/(vmax-vmin))*E*m);
+
+        f=f.*VSHIFT;
+        f=ifft(f,[],2,<span class="string">'symmetric'</span>);
+</pre><h2>Advection in x<a name="11"></a></h2><pre class="codeinput">        f=fft(f,[],1);
+        f=f.*XSHIFT(:,:,sdx);
+</pre><pre class="codeinput">    <span class="keyword">end</span>
+</pre><h2>Visualize phase space<a name="13"></a></h2><pre class="codeinput">    <span class="keyword">if</span> (mod(tdx,20)==0)
+        pcolor(XX,VV,ifft(f,[],1,<span class="string">'symmetric'</span>)-background(XX,VV));
+        shading <span class="string">interp</span>;
+        colormap <span class="string">jet</span>; colorbar; hold <span class="string">on</span>;
+        title(sprintf(<span class="string">'t=%g'</span>, (tdx-1)*dt));
+        xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'v'</span>);
+        drawnow;
+    <span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="spectral_landau_01.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_02.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_03.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_04.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_05.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_06.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_07.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_08.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_09.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_10.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_11.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_12.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_13.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_14.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_15.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_16.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_17.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_18.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_19.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_20.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_21.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_22.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_23.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_24.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_25.png" alt=""> <pre class="codeinput"><span class="keyword">end</span>
+f=ifft(f,[],1,<span class="string">'symmetric'</span>);
+</pre><h2>Discussion<a name="15"></a></h2><pre class="codeinput">time=(0:numt-1)*dt;
+figure(<span class="string">'Name'</span>,<span class="string">'Electrostatic Energy'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+semilogy(time, fieldenergy);
+xlabel(<span class="string">'time'</span>); grid <span class="string">on</span>;
+ylabel(<span class="string">'electrostatic energy'</span>);
+
+<span class="comment">% Include decay rate for linear landau damping WITHOUT COLLISIONS</span>
+<span class="keyword">if</span> (eps&lt;0.1 &amp;&amp; kx==0.5)
+hold <span class="string">on</span>;
+<span class="comment">% Obtain zero of dispersion relation with dispersion_landau.m</span>
+omega=1.415661888604536 - 0.153359466909605i;
+plot(time,0.5*fieldenergy(1)*abs(exp(-1j*omega*(time-0.4))).^2);
+<span class="comment">% linear analysis with frequency</span>
+plot(time,0.5*fieldenergy(1)*real(exp(-1j*omega*(time-0.4))).^2);
+legend(<span class="string">'numerical'</span>, <span class="string">'linear analysis'</span>, <span class="string">'linear analysis'</span>);
+
+hold <span class="string">off</span>;
+<span class="keyword">end</span>
+
+figure(<span class="string">'Name'</span>,<span class="string">'Kinetic Energy'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+semilogy(time, kineticenergy);
+xlabel(<span class="string">'time'</span>); grid <span class="string">on</span>;
+ylabel(<span class="string">'kinetic energy'</span>);
+
+
+
+<span class="comment">%Kullback-Leibler-Entropy relative to initial condition</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Kullback-Leibler-Entropy'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+plot(time,kl_entropy)
+xlabel(<span class="string">'time'</span>); grid <span class="string">on</span>;
+ylabel(<span class="string">'entropy'</span>);
+title(<span class="string">'Kullback-Leibler-Entropy relative to f(t=0)'</span>);
+
+
+<span class="comment">%Shannon-Entropy</span>
+figure(<span class="string">'Name'</span>,<span class="string">'Shannon-Entropy of f'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+plot(time,sh_entropy)
+xlabel(<span class="string">'time'</span>); grid <span class="string">on</span>;
+ylabel(<span class="string">'entropy of f'</span>);
+title(<span class="string">'Shannon-Entropy of f'</span>);
+</pre><img vspace="5" hspace="5" src="spectral_landau_26.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_27.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_28.png" alt=""> <img vspace="5" hspace="5" src="spectral_landau_29.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Spectral 2D Vlasov-Poisson Solver
+% Author: *Jakob Ameres* <http://jakobameres.com jakobameres.com>
+%% Features
+%
+% * Spectral description of density
+% * *Symplectic* (for Vlasov-Poisson) Runge Kutta *time integrator*
+% 
+
+
+%% Landau Damping parameters
+eps=0.05; % Amplitude of perturbation, 0.05 for linear, 0.5 for nonlinear
+kx=0.5;    % Wave vector
+L=2*pi/kx; % length of domain
+qm=-1;    % negative charge to mass = electrons, $\frac{q}{m}=-1$
+
+% Initial condition
+f0=@(x,v) (1+eps*cos(kx*x))./sqrt(2*pi).*exp(-0.5.*v.^2);
+% Background to be subtracted from the phase space plot
+background=@(x,v) 1./sqrt(2*pi).*exp(-0.5.*v.^2);
+% External electric field
+E_ext=@(x,t) 0.*x+0.*t;
+
+dt=0.1; % Time step
+tmax=50;
+rungekutta_order=3; %Order of the runge Kutta time integrator
+
+
+Nx=32; % Number of cells in spatial direction
+Nv=32; % Number of cells in velocity direciton
+vmax=4.5;
+vmin=-4.5;
+
+%% Define phase space mesh
+v=linspace(vmin,vmax,Nv+1).';v=v(1:end-1);
+x=linspace(0,L,Nx+1).';x=x(1:end-1);
+
+[XX,VV]=ndgrid(x,v);
+
+%% Time integration scheme for symplectic runge kutta
+switch rungekutta_order
+    case 1
+        rksd=[1, 0]; %Symplectic Euler
+        rksc=[0, 1];
+    case 2
+        rksd=[0.5, 0.5 ];
+        rksc=[0, 1];
+    case 3
+        rksd=[2/3, -2/3, 1  ];
+        rksc=[ 7/24, 3/4, -1/24];
+    case 4
+        rk4sx=real((2^(1/3) +2^(-1/3)-1)/6);
+        rksd=[ 2*rk4sx +1 , -4*rk4sx-1, 2*rk4sx+1, 0];
+        rksc=[ rk4sx + 0.5 , -rk4sx, -rk4sx, rk4sx +0.5];
+end
+
+%Build Matrix for spatial advection and all stages
+XSHIFT=zeros(Nx,Nv,length(rksd));
+m=fftshift(((1:Nx)-Nx/2-1));
+for jdx=1:length(rksd)
+   XSHIFT(:,:,jdx)=exp((-1j*dt*rksd(jdx)*2*pi/L)*(v*m).');
+end
+%Preallocate matrix for velocity advection
+VSHIFT=zeros(Nx,Nv);
+
+%diagnostic
+numt=ceil(tmax/dt);
+fieldenergy=zeros(numt,1);
+kineticenergy=zeros(numt,1);
+sh_entropy=zeros(numt,1); %Shannon entropy
+kl_entropy=zeros(numt,1); %Kullback-Leibler entropy
+
+EE=zeros(Nx,numt);
+
+
+% Set initial condition
+f=f0(XX,VV);
+%% Fourier transform in x
+f=fft(f,[],1);
+figure('Name', 'Phase Space Density', 'Numbertitle','off');
+for tdx=1:numt
+    
+    %% Loop over all stages of the symplectic Runge Kutta
+    for sdx=1:length(rksd)
+        
+       %% Poisson equation
+        rho=sum(f,2)*(vmax-vmin)/Nv; %rho(x) -> integrate over v
+        rho(1)=0; %remove (ion) background
+        E=rho./(-1j*(2*pi/L)*fftshift(((1:Nx)-Nx/2-1).'));
+        % remove constant fourier mode
+        E(1)=0; 
+        
+        if (sdx==length(rksd))
+            fieldenergy(tdx)=sum(E'*E)/2; %L2 norm of Electric field
+            EE(:,tdx)=E;
+        end
+        
+        E=ifft(E,'symmetric');
+        E=E+E_ext(x,tdx*dt);
+        %plot(x,ifft(E,'symmetric'));
+        
+        
+        %% Advection in v
+        f=ifft(f,[],1,'symmetric'); %back transform
+        % f is fully backtransformed, calculate diagnostics
+        if (sdx==length(rksd))
+            kineticenergy(tdx)=sum(f,1)*v.^2*(vmax-vmin)/Nv;
+            sh_entropy(tdx)=sum(sum(f.*log(abs(f))))*L/Nx*(vmax-vmin)/Nv;
+            kl_entropy(tdx)=sum(sum(f.*log(abs(f./f0(XX,VV)))))...
+                *L/Nx*(vmax-vmin)/Nv;
+        end
+        
+        % Fourier transform in v
+        f=fft(f,[],2);
+        % Build Matrix for spatial advection
+         m=fftshift((1:Nv)  -Nv/2-1);
+         VSHIFT=exp((1j*dt*rksc(sdx)*2*pi/(vmax-vmin))*E*m);
+                    
+        f=f.*VSHIFT;
+        f=ifft(f,[],2,'symmetric');
+        
+        
+        %%  Advection in x
+        f=fft(f,[],1);
+        f=f.*XSHIFT(:,:,sdx);
+        
+    end
+    
+    
+    %% Visualize phase space
+    if (mod(tdx,20)==0)
+        pcolor(XX,VV,ifft(f,[],1,'symmetric')-background(XX,VV)); 
+        shading interp;
+        colormap jet; colorbar; hold on;
+        title(sprintf('t=%g', (tdx-1)*dt));
+        xlabel('x');ylabel('v');
+        drawnow;
+    end
+end
+f=ifft(f,[],1,'symmetric');
+
+%% Discussion
+time=(0:numt-1)*dt;
+figure('Name','Electrostatic Energy','Numbertitle','off');
+semilogy(time, fieldenergy);
+xlabel('time'); grid on;
+ylabel('electrostatic energy');
+
+% Include decay rate for linear landau damping WITHOUT COLLISIONS
+if (eps<0.1 && kx==0.5)
+hold on;
+% Obtain zero of dispersion relation with dispersion_landau.m
+omega=1.415661888604536 - 0.153359466909605i;
+plot(time,0.5*fieldenergy(1)*abs(exp(-1j*omega*(time-0.4))).^2);
+% linear analysis with frequency
+plot(time,0.5*fieldenergy(1)*real(exp(-1j*omega*(time-0.4))).^2);
+legend('numerical', 'linear analysis', 'linear analysis');
+
+hold off;
+end
+
+figure('Name','Kinetic Energy','Numbertitle','off');
+semilogy(time, kineticenergy);
+xlabel('time'); grid on;
+ylabel('kinetic energy');
+
+
+
+%Kullback-Leibler-Entropy relative to initial condition
+figure('Name','Kullback-Leibler-Entropy','Numbertitle','off');
+plot(time,kl_entropy)
+xlabel('time'); grid on;
+ylabel('entropy');
+title('Kullback-Leibler-Entropy relative to f(t=0)');
+
+
+%Shannon-Entropy
+figure('Name','Shannon-Entropy of f','Numbertitle','off');
+plot(time,sh_entropy)
+xlabel('time'); grid on;
+ylabel('entropy of f');
+title('Shannon-Entropy of f');
+
+##### SOURCE END #####
+--></body></html>

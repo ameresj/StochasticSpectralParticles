@@ -1,0 +1,605 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Particle in Cell 2D for the Guiding Center Model</title><meta name="generator" content="MATLAB 9.0"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-20"><meta name="DC.source" content="Diocotron_particles.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Particle in Cell 2D for the Guiding Center Model</h1><!--introduction--><p>Author: <b>Jakob Ameres</b> <a href="http://jakobameres.com">jakobameres.com</a></p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Features</a></li><li><a href="#2">Equations</a></li><li><a href="#3">Parameters</a></li><li><a href="#4">Load Particles</a></li><li><a href="#6">Finite Element Poisson solver</a></li><li><a href="#9">Particle Mesh coupling</a></li><li><a href="#10">Runge Kutta</a></li><li><a href="#12">Particle-Mesh Coupling</a></li><li><a href="#18">Discussion</a></li></ul></div><h2>Features<a name="1"></a></h2><p>This is an example code for the Particle Mesh Coupling using unstructured Finite Elements, with the MATLAB PDE Toolbox. Lagrange Basis functions do not have continous derivatives, making them by far not the optimal choice as basis functions. Yet this should be a simple example to learn and demonstrate the capabilities of an vectorized implementation.</p><div><ul><li>Particle Mesh Coupling to MATLAB PDE Toolbox</li><li>Arbitrary explicit Runge-Kutta methods</li><li>Linear Lagrange Finite Elements on Triangles</li><li>Recursive Last Neighbor particle in simplex location</li><li>Supports unstructured mesh</li><li>Nonconformal elements, no boundary conditions implemented</li></ul></div><h2>Equations<a name="2"></a></h2><p>This code solves the Guiding Center Model. The evolution of a density <img src="Diocotron_particles_eq11418962735341571808.png" alt="$f(x,y)$"> coupled to the Poisson equation</p><p><img src="Diocotron_particles_eq11556658567744844013.png" alt="$$ \partial_t f +  (\nabla \Phi)_y \partial_x f  -&#xA;       (\nabla \Phi)_x \partial_y f  = 0 ,\quad t \in [0,T] $$"></p><p>The electric field comes from the Potential <img src="Diocotron_particles_eq01908532921846404702.png" alt="$\Phi$"> by</p><p><img src="Diocotron_particles_eq14627108629188621995.png" alt="$$ E=(E_x, E_y)^t =-\nabla \Phi $$"></p><p>where the Poisson equation is</p><p><img src="Diocotron_particles_eq14363534220009389112.png" alt="$$ -\Delta\Phi(x,y) = f(x,y) $$"></p><p>The characteristics for every particle are given as</p><p><img src="Diocotron_particles_eq08872079888353683760.png" alt="$$ \frac{d}{dt} x(t) = -E_y(t,x(t),y(t)) ,&#xA;\quad  \frac{d}{dt} y(t) = -E_x(t,x(t),y(t)). $$"></p><p>The implemented testcase is the Diocotron Instability, a special case of a Helmholtz instability in a cylindrical domain. This is actually observable in nature, <a href="http://dx.doi.org/10.1063/1.1761400">see here</a>. The mathematical groundwork with the Semi-Lagrangian method is given in <a href="http://dx.doi.org/10.1140/epjd/e2014-50180-9">Paper</a>.</p><p>Here we change the maximum radius to <img src="Diocotron_particles_eq01405307729838294045.png" alt="$r=1$"> in order to use default MATLAB functions.</p><pre class="codeinput">clear <span class="string">all</span>; close <span class="string">all</span>;
+</pre><h2>Parameters<a name="3"></a></h2><pre class="codeinput">Np=1e4;   <span class="comment">% Number of particles</span>
+dt=0.5;  <span class="comment">% Time step</span>
+tmax=200;  <span class="comment">% Final time</span>
+
+<span class="comment">% Plotting frequency, every _plot_freq_ timestep</span>
+plot_freq=40;
+
+<span class="comment">%r_max=10;</span>
+<span class="comment">%r_min=0;</span>
+<span class="comment">%boundary_cond='dirichlet'; % Options are neumann or dirichlet</span>
+</pre><h2>Load Particles<a name="4"></a></h2><pre class="codeinput">eps=0.3;
+rplus=0.5;
+rminus=0.4;
+mode=5;
+
+f0_polar=@(r,theta,phi)(1-eps*cos(theta*mode)).*(r&gt;=rminus).*(r&lt;=rplus);
+g0_polar=@(r,theta,phi)(1-eps*cos(theta*mode)).*<span class="keyword">...</span>
+    (r&gt;=rminus).*(r&lt;=rplus)*2.*r/(rplus.^2-rminus.^2)/(2*pi);
+</pre><p>Randomized Quasi Monte Carlo with the SOBOL sequence. Scramble.</p><pre class="codeinput">sobolnum = sobolset(2,<span class="string">'Skip'</span>,  0);
+sobolnum= scramble(sobolnum,<span class="string">'MatousekAffineOwen'</span>);
+
+rk=sqrt(sobolnum(1:Np,1)*(rplus^2-rminus^2) + rminus^2);
+uniformrnd=sobolnum(1:Np,2);
+thetak=uniformrnd*2*pi;
+idx=0;
+<span class="keyword">while</span> (idx&lt;=20 ) <span class="comment">%a bit much</span>
+    thetak=thetak- (thetak - eps*sin(mode*thetak)/mode -2*pi*uniformrnd)./<span class="keyword">...</span>
+        (1-eps*cos(mode*thetak));
+    idx=idx+1;
+<span class="keyword">end</span>
+clear <span class="string">uniformrnd</span>;
+
+
+<span class="comment">% Set density and sampling likelihood</span>
+fk=f0_polar(rk,thetak);
+gk=g0_polar(rk,thetak)./rk;
+
+<span class="comment">%Transform into cartesian coordinates</span>
+xk=rk.*cos(thetak);
+yk=rk.*sin(thetak);
+clear <span class="string">rk</span> <span class="string">thetak</span>;
+</pre><h2>Finite Element Poisson solver<a name="6"></a></h2><p>Create PDE model for the poisson equation</p><pre class="codeinput">model = createpde(1);
+
+<span class="comment">% Define outer boundary as a circle, according to the MATLAB structure.</span>
+boundary=@circleg;
+
+<span class="comment">%Define the geometry from a limiting function</span>
+geometryFromEdges(model,boundary);
+
+
+<span class="comment">% Meshing with triangles for linear Lagrange Elements</span>
+generateMesh(model,<span class="string">'Hmax'</span>,0.03,<span class="string">'GeometricOrder'</span>,<span class="string">'linear'</span>);
+</pre><p>Assemble poisson matrix and mass matrix</p><pre class="codeinput">specifyCoefficients(model,<span class="string">'m'</span>,0,<span class="string">'d'</span>,0,<span class="string">'c'</span>,1,<span class="string">'a'</span>,1,<span class="string">'f'</span>,1);
+<span class="comment">% Dirichlet null Boundary Condition</span>
+applyBoundaryCondition(model,<span class="string">'edge'</span>,1:model.Geometry.NumEdges,<span class="string">'u'</span>,0);
+applyBoundaryCondition(model,<span class="string">'edge'</span>,1:model.Geometry.NumEdges,<span class="string">'g'</span>,0,<span class="string">'q'</span>,0);
+FEM = assembleFEMatrices(model);
+<span class="comment">% Incorporate dirichlet boundary conditions in laplace operator</span>
+K=FEM.K+FEM.Q + (FEM.H'*FEM.H); <span class="comment">%Poisson Matrix</span>
+M=FEM.A; <span class="comment">% Mass matrix for reconstruction, L^2 Projection</span>
+</pre><h2>Particle Mesh coupling<a name="9"></a></h2><p>Particles in the domain</p><pre class="codeinput">figure(<span class="string">'Name'</span>,<span class="string">'Domain with Particles'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+pdegplot(boundary, <span class="string">'edgeLabels'</span>, <span class="string">'on'</span>);
+hold <span class="string">on</span>;
+plot(xk,yk,<span class="string">'.'</span>); grid <span class="string">on</span>;axis <span class="string">equal</span>;
+hold <span class="string">off</span>;
+title(<span class="string">'Particles t=0'</span>);
+xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'y'</span>);
+
+
+<span class="comment">% Create Triangulation structure from the mesh</span>
+TR = triangulation(model.Mesh.Elements', <span class="keyword">...</span>
+    model.Mesh.Nodes(1,:)', <span class="keyword">...</span>
+    model.Mesh.Nodes(2,:)');
+
+<span class="comment">% Set up gradient for every basis function on every triangle.</span>
+<span class="comment">% The gradient is constant, therefore this saves computational power</span>
+grad_phi=[TR.Points(TR.ConnectivityList(:,2),2)- TR.Points(TR.ConnectivityList(:,3),2),<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,3),2)- TR.Points(TR.ConnectivityList(:,1),2),<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,1),2)- TR.Points(TR.ConnectivityList(:,2),2),<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,3),1)- TR.Points(TR.ConnectivityList(:,2),1),<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,1),1)- TR.Points(TR.ConnectivityList(:,3),1),<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,2),1)- TR.Points(TR.ConnectivityList(:,1),1)];
+
+<span class="comment">%Normalize with area of triangle</span>
+grad_phi=bsxfun(@times,grad_phi,1./(<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,2),1).*TR.Points(TR.ConnectivityList(:,3),2) +<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,1),1).*TR.Points(TR.ConnectivityList(:,2),2) +<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,3),1).*TR.Points(TR.ConnectivityList(:,1),2) -<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,2),1).*TR.Points(TR.ConnectivityList(:,1),2)-<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,3),1).*TR.Points(TR.ConnectivityList(:,2),2)-<span class="keyword">...</span>
+    TR.Points(TR.ConnectivityList(:,1),1).*TR.Points(TR.ConnectivityList(:,3),2)));
+</pre><img vspace="5" hspace="5" src="Diocotron_particles_01.png" alt=""> <h2>Runge Kutta<a name="10"></a></h2><p>Define the Butcher tableau Second order</p><pre class="codeinput">rk.A=[0, 0; 1, 0];
+rk.c=[0;1];
+rk.b=[0.5, 0.5];
+<span class="comment">% Fourth order</span>
+rk.A=[0,0,0,0; 0.5,0,0,0; 0,0.5,0,0;0,0,1,0];
+rk.c=[0; 0.5; 0.5;1];
+rk.b=[1/6, 1/3, 1/3, 1/6];
+
+
+<span class="comment">% Create figures for live diagnostic</span>
+fig1=figure(<span class="string">'Name'</span>,<span class="string">'Particle-Mesh'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+fig2=figure(<span class="string">'Name'</span>,<span class="string">'Density'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+fig3=figure(<span class="string">'Name'</span>,<span class="string">'Potential'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+
+
+<span class="comment">% Locate particles at initial time</span>
+[TI, BC] = pointLocation(TR, [xk,yk]);
+tstep=1;
+<span class="keyword">for</span> t=0:dt:tmax
+
+
+    <span class="comment">% Loop over Runge Kutta stages</span>
+    <span class="keyword">for</span> rkdx=1:length(rk.A)
+</pre><pre class="codeinput">        <span class="comment">% Allocate stages</span>
+        rk.kx=zeros(Np,length(rk.b));
+        rk.ky=zeros(Np,length(rk.b));
+</pre><h2>Particle-Mesh Coupling<a name="12"></a></h2><p>Locate the particles in the triangulation</p><pre class="codeinput">        <span class="comment">%_TI_ is the triangle index</span>
+        <span class="comment">%_BC_ contains the barycentric coordinates in the triangle</span>
+
+        tic;
+        [TI,BC]=locate_particles(TR, <span class="keyword">...</span>
+            [xk+rk.kx*dt*rk.A(rkdx,:)',<span class="keyword">...</span>
+            yk+rk.ky*dt*rk.A(rkdx,:)'],<span class="keyword">...</span>
+            TI);
+        <span class="comment">% Measure particle location time</span>
+        location_time(rkdx,tstep)=toc;
+
+
+
+        <span class="comment">% Find the three nodes _node_ for every particle</span>
+        node=TR.ConnectivityList(TI,:);
+
+        <span class="comment">% Accumulate charge onto grid</span>
+        rhs=accumarray(reshape(node.',Np*3,1),<span class="keyword">...</span>
+            reshape( bsxfun(@times,BC, fk./gk).', Np*3,1),<span class="keyword">...</span>
+            [size(model.Mesh.Nodes,2) ,1])./Np;
+
+
+        <span class="comment">% Solve the poisson equation</span>
+        <span class="comment">%rho=M\rhs;</span>
+        phi=K\rhs;
+
+        <span class="comment">% Diagnostic</span>
+        <span class="keyword">if</span> (rkdx==1)
+            energy(tstep)=phi'*rhs;
+            l2norm(tstep)=rhs'*(M\rhs);
+        <span class="keyword">end</span>
+
+
+        <span class="comment">%pdeplot(model,'xydata',sol)</span>
+
+        <span class="comment">% Evaluate gradient of the solution</span>
+        Ex=phi(node(:,1)).*grad_phi(TI,1)<span class="keyword">...</span>
+            +phi(node(:,2)).*grad_phi(TI,2)<span class="keyword">...</span>
+            +phi(node(:,3)).*grad_phi(TI,3);
+        Ey=phi(node(:,1)).*grad_phi(TI,4)<span class="keyword">...</span>
+            +phi(node(:,2)).*grad_phi(TI,5)<span class="keyword">...</span>
+            +phi(node(:,3)).*grad_phi(TI,6);
+
+        rk.kx(:,rkdx)=-Ey; <span class="comment">%+ E_y(x, t+ rk.c*dt)</span>
+        rk.ky(:,rkdx)=Ex;
+</pre><pre class="codeinput">    <span class="keyword">end</span>
+    <span class="comment">% Final stage of Runge Kutta</span>
+    xk=xk + dt*rk.kx*rk.b';
+    yk=yk + dt*rk.ky*rk.b';
+
+
+
+    <span class="comment">% Diagnostic</span>
+    <span class="keyword">if</span> ( mod(t/dt,plot_freq)==0)
+</pre><p>Particles in the Mesh.</p><pre class="codeinput">        figure(fig1);
+        pdemesh(model); axis <span class="string">equal</span> <span class="string">tight</span>; hold <span class="string">on</span>;
+        plot(xk,yk,<span class="string">'.'</span>); hold <span class="string">off</span>
+        xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'y'</span>);
+        title(sprintf(<span class="string">'Particles, t=%6.2f'</span>,t+dt));
+</pre><img vspace="5" hspace="5" src="Diocotron_particles_02.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_05.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_08.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_11.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_14.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_17.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_20.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_23.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_26.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_29.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_32.png" alt=""> <p>Density <img src="Diocotron_particles_eq11418962735341571808.png" alt="$f(x,y)$">.</p><pre class="codeinput">        figure(fig2);
+        pdeplot(model,<span class="string">'xydata'</span>,M\rhs); axis <span class="string">equal</span> <span class="string">tight</span>;
+        colormap <span class="string">jet</span>;
+        xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'y'</span>);
+        title(sprintf(<span class="string">'Density, t=%6.2f'</span>,t+dt));
+</pre><img vspace="5" hspace="5" src="Diocotron_particles_03.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_06.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_09.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_12.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_15.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_18.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_21.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_24.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_27.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_30.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_33.png" alt=""> <p>Potential <img src="Diocotron_particles_eq13432413472464696064.png" alt="$\Phi(x,y)$"></p><pre class="codeinput">        figure(fig3);
+        pdeplot(model,<span class="string">'xydata'</span>,phi); axis <span class="string">equal</span> <span class="string">tight</span>;
+        colormap <span class="string">jet</span>;
+        xlabel(<span class="string">'x'</span>);ylabel(<span class="string">'y'</span>);
+        title(sprintf(<span class="string">'Potential, t=%6.2f'</span>,t+dt));
+        drawnow;
+</pre><img vspace="5" hspace="5" src="Diocotron_particles_04.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_07.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_10.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_13.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_16.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_19.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_22.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_25.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_28.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_31.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_34.png" alt=""> <pre class="codeinput">    <span class="keyword">end</span>
+    tstep=tstep+1;
+<span class="keyword">end</span>
+</pre><h2>Discussion<a name="18"></a></h2><p>Energy.</p><pre class="codeinput">time=0:dt:tmax;
+
+figure(<span class="string">'Name'</span>,<span class="string">'Energy'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+plot(time,energy);
+title(<span class="string">'Field Energy'</span>);
+xlabel(<span class="string">'time'</span>);
+
+figure(<span class="string">'Name'</span>,<span class="string">'Energy Error'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+plot(time,abs(energy-energy(1))./abs(energy(1)));
+title(<span class="string">'Relative Energy Error'</span>);
+xlabel(<span class="string">'time'</span>);
+
+
+figure(<span class="string">'Name'</span>,<span class="string">'L2 Norm'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+plot(time,l2norm);
+title(<span class="string">'$L^2$ norm of density'</span>,<span class="string">'interpreter'</span>,<span class="string">'latex'</span>);
+xlabel(<span class="string">'time'</span>);
+
+figure(<span class="string">'Name'</span>,<span class="string">'Particle Location Time'</span>,<span class="string">'Numbertitle'</span>,<span class="string">'off'</span>);
+<span class="keyword">for</span> idx=1:size(location_time,1)
+    plot(time, location_time(idx,:),<span class="string">'Displayname'</span>,<span class="keyword">...</span>
+        sprintf(<span class="string">'rk stage %d'</span>, idx));
+    hold <span class="string">on</span>;
+<span class="keyword">end</span>
+xlabel(<span class="string">'time'</span>); grid <span class="string">on</span>;
+title(<span class="string">'Particle Location time'</span>);
+legend(<span class="string">'-DynamicLegend'</span>,<span class="string">'Location'</span>,<span class="string">'NorthEast'</span>);
+</pre><img vspace="5" hspace="5" src="Diocotron_particles_35.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_36.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_37.png" alt=""> <img vspace="5" hspace="5" src="Diocotron_particles_38.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2016a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Particle in Cell 2D for the Guiding Center Model
+% Author: *Jakob Ameres* <http://jakobameres.com jakobameres.com>
+%% Features
+% This is an example code for the Particle Mesh Coupling using unstructured
+% Finite Elements, with the MATLAB PDE Toolbox. Lagrange Basis functions
+% do not have continous derivatives, making them by far not the optimal
+% choice as basis functions. Yet this should be a simple example to learn
+% and demonstrate the capabilities of an vectorized implementation.
+%
+% * Particle Mesh Coupling to MATLAB PDE Toolbox
+% * Arbitrary explicit Runge-Kutta methods
+% * Linear Lagrange Finite Elements on Triangles
+% * Recursive Last Neighbor particle in simplex location
+% * Supports unstructured mesh
+% * Nonconformal elements, no boundary conditions implemented
+
+%% Equations
+% This code solves the Guiding Center Model. The evolution of a
+% density $f(x,y)$ coupled to the Poisson equation
+%
+% $$ \partial_t f +  (\nabla \Phi)_y \partial_x f  -
+%        (\nabla \Phi)_x \partial_y f  = 0 ,\quad t \in [0,T] $$
+%
+% The electric field comes from the Potential $\Phi$ by
+%
+% $$ E=(E_x, E_y)^t =-\nabla \Phi $$
+%
+% where the Poisson equation is
+%
+% $$ -\Delta\Phi(x,y) = f(x,y) $$
+%
+% The characteristics for every particle are given as
+% 
+% $$ \frac{d}{dt} x(t) = -E_y(t,x(t),y(t)) ,
+% \quad  \frac{d}{dt} y(t) = -E_x(t,x(t),y(t)). $$
+%
+% The implemented testcase is the Diocotron Instability, a special case
+% of a Helmholtz instability in a cylindrical domain. This is actually
+% observable in nature, <http://dx.doi.org/10.1063/1.1761400 see here>.
+% The mathematical groundwork with the Semi-Lagrangian method is given in
+% <http://dx.doi.org/10.1140/epjd/e2014-50180-9 Paper>.
+%
+% Here we change the maximum radius to $r=1$ in order to use default
+% MATLAB functions.
+%
+clear all; close all;
+
+
+%% Parameters
+Np=1e4;   % Number of particles
+dt=0.5;  % Time step
+tmax=200;  % Final time
+
+% Plotting frequency, every _plot_freq_ timestep
+plot_freq=40;
+
+%r_max=10;
+%r_min=0;
+%boundary_cond='dirichlet'; % Options are neumann or dirichlet
+
+%% Load Particles
+%
+eps=0.3;
+rplus=0.5;
+rminus=0.4;
+mode=5;
+
+f0_polar=@(r,theta,phi)(1-eps*cos(theta*mode)).*(r>=rminus).*(r<=rplus);
+g0_polar=@(r,theta,phi)(1-eps*cos(theta*mode)).*...
+    (r>=rminus).*(r<=rplus)*2.*r/(rplus.^2-rminus.^2)/(2*pi);
+
+
+%%
+% Randomized Quasi Monte Carlo with the SOBOL sequence.
+% Scramble.
+sobolnum = sobolset(2,'Skip',  0);
+sobolnum= scramble(sobolnum,'MatousekAffineOwen');
+
+rk=sqrt(sobolnum(1:Np,1)*(rplus^2-rminus^2) + rminus^2);
+uniformrnd=sobolnum(1:Np,2);
+thetak=uniformrnd*2*pi;
+idx=0;
+while (idx<=20 ) %a bit much
+    thetak=thetak- (thetak - eps*sin(mode*thetak)/mode -2*pi*uniformrnd)./...
+        (1-eps*cos(mode*thetak));
+    idx=idx+1;
+end
+clear uniformrnd;
+
+
+% Set density and sampling likelihood
+fk=f0_polar(rk,thetak);
+gk=g0_polar(rk,thetak)./rk;
+
+%Transform into cartesian coordinates
+xk=rk.*cos(thetak);
+yk=rk.*sin(thetak);
+clear rk thetak;
+
+
+
+
+%% Finite Element Poisson solver
+%%
+% Create PDE model for the poisson equation
+model = createpde(1);
+
+% Define outer boundary as a circle, according to the MATLAB structure.
+boundary=@circleg;
+
+%Define the geometry from a limiting function
+geometryFromEdges(model,boundary);
+
+
+% Meshing with triangles for linear Lagrange Elements
+generateMesh(model,'Hmax',0.03,'GeometricOrder','linear');
+
+%%
+% Assemble poisson matrix and mass matrix
+
+specifyCoefficients(model,'m',0,'d',0,'c',1,'a',1,'f',1);
+% Dirichlet null Boundary Condition
+applyBoundaryCondition(model,'edge',1:model.Geometry.NumEdges,'u',0);
+applyBoundaryCondition(model,'edge',1:model.Geometry.NumEdges,'g',0,'q',0);
+FEM = assembleFEMatrices(model);
+% Incorporate dirichlet boundary conditions in laplace operator
+K=FEM.K+FEM.Q + (FEM.H'*FEM.H); %Poisson Matrix
+M=FEM.A; % Mass matrix for reconstruction, L^2 Projection
+
+
+%% Particle Mesh coupling
+%
+% Particles in the domain
+figure('Name','Domain with Particles','Numbertitle','off');
+pdegplot(boundary, 'edgeLabels', 'on');
+hold on;
+plot(xk,yk,'.'); grid on;axis equal;
+hold off;
+title('Particles t=0');
+xlabel('x');ylabel('y');
+
+
+% Create Triangulation structure from the mesh
+TR = triangulation(model.Mesh.Elements', ...
+    model.Mesh.Nodes(1,:)', ...
+    model.Mesh.Nodes(2,:)');
+
+% Set up gradient for every basis function on every triangle.
+% The gradient is constant, therefore this saves computational power
+grad_phi=[TR.Points(TR.ConnectivityList(:,2),2)- TR.Points(TR.ConnectivityList(:,3),2),...
+    TR.Points(TR.ConnectivityList(:,3),2)- TR.Points(TR.ConnectivityList(:,1),2),...
+    TR.Points(TR.ConnectivityList(:,1),2)- TR.Points(TR.ConnectivityList(:,2),2),...
+    TR.Points(TR.ConnectivityList(:,3),1)- TR.Points(TR.ConnectivityList(:,2),1),...
+    TR.Points(TR.ConnectivityList(:,1),1)- TR.Points(TR.ConnectivityList(:,3),1),...
+    TR.Points(TR.ConnectivityList(:,2),1)- TR.Points(TR.ConnectivityList(:,1),1)];
+
+%Normalize with area of triangle
+grad_phi=bsxfun(@times,grad_phi,1./(...
+    TR.Points(TR.ConnectivityList(:,2),1).*TR.Points(TR.ConnectivityList(:,3),2) +...
+    TR.Points(TR.ConnectivityList(:,1),1).*TR.Points(TR.ConnectivityList(:,2),2) +...
+    TR.Points(TR.ConnectivityList(:,3),1).*TR.Points(TR.ConnectivityList(:,1),2) -...
+    TR.Points(TR.ConnectivityList(:,2),1).*TR.Points(TR.ConnectivityList(:,1),2)-...
+    TR.Points(TR.ConnectivityList(:,3),1).*TR.Points(TR.ConnectivityList(:,2),2)-...
+    TR.Points(TR.ConnectivityList(:,1),1).*TR.Points(TR.ConnectivityList(:,3),2)));
+
+
+
+%% Runge Kutta
+% Define the Butcher tableau
+% Second order
+rk.A=[0, 0; 1, 0];
+rk.c=[0;1];
+rk.b=[0.5, 0.5];
+% Fourth order
+rk.A=[0,0,0,0; 0.5,0,0,0; 0,0.5,0,0;0,0,1,0];
+rk.c=[0; 0.5; 0.5;1];
+rk.b=[1/6, 1/3, 1/3, 1/6];
+
+
+% Create figures for live diagnostic
+fig1=figure('Name','Particle-Mesh','Numbertitle','off');
+fig2=figure('Name','Density','Numbertitle','off');
+fig3=figure('Name','Potential','Numbertitle','off');
+
+
+% Locate particles at initial time
+[TI, BC] = pointLocation(TR, [xk,yk]);
+tstep=1;
+for t=0:dt:tmax
+    
+    
+    % Loop over Runge Kutta stages
+    for rkdx=1:length(rk.A)
+        % Allocate stages
+        rk.kx=zeros(Np,length(rk.b));
+        rk.ky=zeros(Np,length(rk.b));
+        
+        
+        %% Particle-Mesh Coupling
+        % Locate the particles in the triangulation
+        %_TI_ is the triangle index
+        %_BC_ contains the barycentric coordinates in the triangle
+        
+        tic;
+        [TI,BC]=locate_particles(TR, ...
+            [xk+rk.kx*dt*rk.A(rkdx,:)',...
+            yk+rk.ky*dt*rk.A(rkdx,:)'],...
+            TI);
+        % Measure particle location time
+        location_time(rkdx,tstep)=toc;
+        
+        
+        
+        % Find the three nodes _node_ for every particle
+        node=TR.ConnectivityList(TI,:);
+        
+        % Accumulate charge onto grid
+        rhs=accumarray(reshape(node.',Np*3,1),...
+            reshape( bsxfun(@times,BC, fk./gk).', Np*3,1),...
+            [size(model.Mesh.Nodes,2) ,1])./Np;
+        
+        
+        % Solve the poisson equation
+        %rho=M\rhs;
+        phi=K\rhs;
+        
+        % Diagnostic
+        if (rkdx==1)
+            energy(tstep)=phi'*rhs;
+            l2norm(tstep)=rhs'*(M\rhs);
+        end
+        
+        
+        %pdeplot(model,'xydata',sol)
+        
+        % Evaluate gradient of the solution
+        Ex=phi(node(:,1)).*grad_phi(TI,1)...
+            +phi(node(:,2)).*grad_phi(TI,2)...
+            +phi(node(:,3)).*grad_phi(TI,3);
+        Ey=phi(node(:,1)).*grad_phi(TI,4)...
+            +phi(node(:,2)).*grad_phi(TI,5)...
+            +phi(node(:,3)).*grad_phi(TI,6);
+        
+        rk.kx(:,rkdx)=-Ey; %+ E_y(x, t+ rk.c*dt)
+        rk.ky(:,rkdx)=Ex;
+    end
+    % Final stage of Runge Kutta
+    xk=xk + dt*rk.kx*rk.b';
+    yk=yk + dt*rk.ky*rk.b';
+    
+    
+    
+    % Diagnostic
+    if ( mod(t/dt,plot_freq)==0)
+        %%
+        % Particles in the Mesh.
+        figure(fig1);
+        pdemesh(model); axis equal tight; hold on;
+        plot(xk,yk,'.'); hold off
+        xlabel('x');ylabel('y');
+        title(sprintf('Particles, t=%6.2f',t+dt));
+        
+        %%
+        % Density $f(x,y)$.
+        figure(fig2);
+        pdeplot(model,'xydata',M\rhs); axis equal tight;
+        colormap jet;
+        xlabel('x');ylabel('y');
+        title(sprintf('Density, t=%6.2f',t+dt));
+        
+        %%
+        % Potential $\Phi(x,y)$
+        figure(fig3);
+        pdeplot(model,'xydata',phi); axis equal tight;
+        colormap jet;
+        xlabel('x');ylabel('y');
+        title(sprintf('Potential, t=%6.2f',t+dt));
+        drawnow;
+        
+    end
+    tstep=tstep+1;
+end
+
+%% Discussion
+% Energy.
+time=0:dt:tmax;
+
+figure('Name','Energy','Numbertitle','off');
+plot(time,energy);
+title('Field Energy');
+xlabel('time');
+
+figure('Name','Energy Error','Numbertitle','off');
+plot(time,abs(energy-energy(1))./abs(energy(1)));
+title('Relative Energy Error');
+xlabel('time');
+
+
+figure('Name','L2 Norm','Numbertitle','off');
+plot(time,l2norm);
+title('$L^2$ norm of density','interpreter','latex');
+xlabel('time');
+
+figure('Name','Particle Location Time','Numbertitle','off');
+for idx=1:size(location_time,1)
+    plot(time, location_time(idx,:),'Displayname',...
+        sprintf('rk stage %d', idx));
+    hold on;
+end
+xlabel('time'); grid on;
+title('Particle Location time');
+legend('-DynamicLegend','Location','NorthEast');
+
+
+
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,189 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>dispersion_landau</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-04-12"><meta name="DC.source" content="dispersion_landau.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Dispersion relation for Landau Damping</a></li><li><a href="#2">Plasma dispersion function Z(x)</a></li><li><a href="#3">Dispersion relation</a></li><li><a href="#4">Find zeros</a></li><li><a href="#5">Visualize result</a></li><li><a href="#6">Standard test case <img src="dispersion_landau_eq06275644584437600454.png" alt="$k=0.5$"></a></li></ul></div><h2>Dispersion relation for Landau Damping<a name="1"></a></h2><p>Author: <b>Jakob Ameres</b> <a href="http://jakobameres.com">jakobameres.com</a></p><p>Use MATLABs symbolic toolbox, and define frequency <img src="dispersion_landau_eq08589834809570054062.png" alt="$\omega$">, wave vector <img src="dispersion_landau_eq15636846968047188835.png" alt="$k$"></p><pre class="codeinput">syms <span class="string">omega</span> <span class="string">k</span> <span class="string">x</span>
+
+<span class="comment">% Set the number of significant decimal digits</span>
+<span class="comment">% for variable-precision arithmetic</span>
+digits(16);
+
+<span class="comment">% Set up grid of wave vectors the dispersion relation should be solved for</span>
+kgrid=linspace(0.1,0.6,25+1);
+numz=1; <span class="comment">%Number of tries to find a zero</span>
+</pre><h2>Plasma dispersion function Z(x)<a name="2"></a></h2><p>The plasma dispersion function can be found in many textbooks</p><pre class="codeinput">Z=symfun( sqrt(sym(pi))*exp(-x^2)*(1j-erfi(x)),x);
+
+<span class="comment">% Define parameters</span>
+vth=1;    <span class="comment">%Thermal velocity of electrons</span>
+omegap=1; <span class="comment">%Plasma frequency</span>
+</pre><h2>Dispersion relation<a name="3"></a></h2><p>Dispersion relation for a Langmuir wave with initial condition</p><p><img src="dispersion_landau_eq01083870252765680428.png" alt="$$f(t=0,x,v)=\frac{1}{\sqrt{2 \pi}}&#xA; e^{- \frac{1}{2} \left( \frac{v}{v_{th}}\right)^2}$$"></p><pre class="codeinput">D=symfun(1+ (omegap/vth/k)^2*(1+ omega/vth/sqrt(2)/k*<span class="keyword">...</span>
+    Z(omega/vth/sqrt(2)/k)), <span class="keyword">...</span>
+    [omega,k]);
+</pre><h2>Find zeros<a name="4"></a></h2><p>Use MATLABS internal variable precision arithmetic to solve for the zeroes of the dispersion relation for every k</p><pre class="codeinput">OM=zeros(length(kgrid),numz); <span class="comment">%contains omegas</span>
+<span class="keyword">for</span> idx=1:length(kgrid)
+    <span class="keyword">for</span> jdx=1:numz
+        sol=[];
+        <span class="comment">% repeated search for zero until a solution is found</span>
+        <span class="keyword">while</span>(isempty(sol))
+           sol=vpasolve(D(omega,kgrid(idx))==0,<span class="string">'random'</span>,true);
+        <span class="keyword">end</span>
+        OM(idx,jdx)=sol;
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+</pre><h2>Visualize result<a name="5"></a></h2><pre class="codeinput">figure;
+plot(kgrid,abs(real(OM)),<span class="string">'*'</span>); grid <span class="string">on</span>;
+xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'frequency'</span>);
+title(<span class="string">'zeros of dispersion relation'</span>)
+
+figure;
+plot(kgrid,-imag(OM),<span class="string">'*'</span>); grid <span class="string">on</span>;
+xlabel(<span class="string">'k'</span>); ylabel(<span class="string">'damping rate'</span>);
+title(<span class="string">'zeros of dispersion relation'</span>)
+</pre><img vspace="5" hspace="5" src="dispersion_landau_01.png" alt=""> <img vspace="5" hspace="5" src="dispersion_landau_02.png" alt=""> <h2>Standard test case <img src="dispersion_landau_eq06275644584437600454.png" alt="$k=0.5$"><a name="6"></a></h2><p>Found the following zeros for the dispersion relation for the standard test case <img src="dispersion_landau_eq06275644584437600454.png" alt="$k=0.5$"></p><pre class="codeinput">disp(OM(kgrid==0.5,:).')
+</pre><pre class="codeoutput">  1.415661888604536 - 0.153359466909605i
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Dispersion relation for Landau Damping
+% Author: *Jakob Ameres* <http://jakobameres.com jakobameres.com>
+%
+% Use MATLABs symbolic toolbox, and define
+% frequency $\omega$, wave vector $k$
+syms omega k x
+
+% Set the number of significant decimal digits
+% for variable-precision arithmetic
+digits(16); 
+
+% Set up grid of wave vectors the dispersion relation should be solved for
+kgrid=linspace(0.1,0.6,25+1);
+numz=1; %Number of tries to find a zero
+
+
+%% Plasma dispersion function Z(x)
+% The plasma dispersion function can be found in many textbooks
+Z=symfun( sqrt(sym(pi))*exp(-x^2)*(1j-erfi(x)),x);
+
+% Define parameters
+vth=1;    %Thermal velocity of electrons
+omegap=1; %Plasma frequency
+
+%% Dispersion relation
+% Dispersion relation for a Langmuir wave with initial condition
+%
+% $$f(t=0,x,v)=\frac{1}{\sqrt{2 \pi}} 
+%  e^{- \frac{1}{2} \left( \frac{v}{v_{th}}\right)^2}$$
+%
+D=symfun(1+ (omegap/vth/k)^2*(1+ omega/vth/sqrt(2)/k*...
+    Z(omega/vth/sqrt(2)/k)), ...
+    [omega,k]);
+
+%% Find zeros
+% Use MATLABS internal variable precision arithmetic
+% to solve for the zeroes of the dispersion relation for every k
+OM=zeros(length(kgrid),numz); %contains omegas 
+for idx=1:length(kgrid)
+    for jdx=1:numz
+        sol=[];
+        % repeated search for zero until a solution is found
+        while(isempty(sol))
+           sol=vpasolve(D(omega,kgrid(idx))==0,'random',true);
+        end
+        OM(idx,jdx)=sol;
+    end
+end
+
+%% Visualize result
+figure;
+plot(kgrid,abs(real(OM)),'*'); grid on;
+xlabel('k'); ylabel('frequency');
+title('zeros of dispersion relation')
+
+figure;
+plot(kgrid,-imag(OM),'*'); grid on;
+xlabel('k'); ylabel('damping rate');
+title('zeros of dispersion relation')
+
+%% Standard test case $k=0.5$
+% Found the following zeros for the dispersion relation for 
+% the standard test case $k=0.5$
+%
+disp(OM(kgrid==0.5,:).')
+
+
+
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>
